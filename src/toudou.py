@@ -1,6 +1,6 @@
 from os.path import isfile
+from os import linesep
 import click
-import uuid
 from datetime import date
 from pickle import dump, load
 from dataclasses import dataclass
@@ -8,23 +8,58 @@ from dataclasses import dataclass
 # alias
 l = list
 
-# globals
-TODOLIST = "todolist.p"
-
 
 @dataclass
-class Todo:
-    id: uuid.UUID
-    task: str
-    date: date | None
-    done: bool
+class TodoList:
+    @dataclass
+    class Todo:
+        id: int
+        task: str
+        date: date | None
+        done: bool
 
-    def __str__(self) -> str:
-        return (
-            "I need to "
-            + self.task
-            + ("for " + self.date if self.date is not None else "")
-        )
+        def __str__(self) -> str:
+            return (
+                "- "
+                + self.task
+                + (" (" + self.date + ")" if self.date is not None else "")
+            )
+
+    # use the next line for multiple todo lists
+    # id: ID
+    file: str
+
+    def exists(s) -> bool:
+        return isfile(s.file)
+
+    def empty(s) -> bool:
+        with open(s.file, "br") as file:
+            return not file.read()
+
+    def new(s, task: str, date=None):
+        if not s.exists:
+            with open(s.file, "x+b") as file:
+                dump([TodoList.Todo(1, task, date, False)], file)
+        else:
+            if s.empty:
+                with open(s.file, "bw") as file:
+                    dump([TodoList.Todo(1, task, date, False)], file)
+            else:
+                with open(s.file, "br") as file:
+                    todolist = load(file)
+                with open(s.file, "bw") as file:
+                    dump(
+                        todolist + [TodoList.Todo(len(todolist), task, date, False)],
+                        file,
+                    )
+
+    def __str__(s) -> str:
+        if not s.exists:
+            return "No todolist!"
+        if s.empty:
+            return "Nothing to do."
+        with open(s.file, "br") as file:
+            return linesep.join([str(t) for t in load(file)])
 
 
 @click.group()
@@ -36,27 +71,9 @@ def cli():
 @click.option("-t", "--task", prompt="Your task", help="The task to remember.")
 @click.option("-d", "--duefor", help="The date the task is due for.")
 def new(task: str, duefor=None):
-    todo = Todo(uuid.uuid4(), task, duefor, False)
-    if not isfile(TODOLIST):
-        print("new todolist")
-        with open(TODOLIST, "x+b") as file:
-            dump([todo], file)
-    else:
-        with open(TODOLIST, "br") as file:
-            empty = not file.read()
-        if empty:
-            print("that's the only task in the list")
-            with open(TODOLIST, "bw") as file:
-                dump([todo], file)
-        else:
-            with open(TODOLIST, "br") as file:
-                todolist = load(file)
-            with open(TODOLIST, "bw") as file:
-                dump(todolist + [todo], file)
+    TodoList("todolist.p").new(task, duefor)
 
 
 @cli.command()
 def list():
-    with open(TODOLIST, "br") as file:
-        for todo in load(file):
-            print(todo)
+    print(TodoList("todolist.p"))
