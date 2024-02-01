@@ -1,0 +1,4 @@
+*.p
+pdm.lock
+.pdm-python
+*.pyc
