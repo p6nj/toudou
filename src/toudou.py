@@ -36,13 +36,14 @@ def cli():
 
 
 @cli.group()
-def lists():
-    pass
-
-
-@cli.group()
 def new():
     pass
+
+
+@cli.command()
+@click.argument("list", type=click.File("rb"))
+def show(list):
+    print(load(list))
 
 
 @new.command()
@@ -56,12 +57,14 @@ def list(name):
 @click.option(
     "-l",
     "--list",
-    type=click.File("rb+"),
+    type=click.Path(True, True, readable=True, writable=True),
     prompt="Todo-list",
     help="The todo-list where to put this task.",
 )
 @click.option("-d", "--duefor", help="The date the task is due for.")
 def todo(task: str, list, duefor=None):
-    todos = load(list)
+    with open(list, "rb") as file:
+        todos = load(file)
     todos.items.append(TodoList.Item(task, duefor, False))
-    dump(todos, list)
+    with open(list, "wb") as file:
+        dump(todos, file)
