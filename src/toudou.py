@@ -1,4 +1,3 @@
-from os.path import isfile
 from os import linesep
 import click
 from datetime import date
@@ -14,7 +13,7 @@ class TodoList:
         self.items: [TodoList.Item] = []
 
     def __str__(self) -> str:
-        return linesep.join([str(t) for t in self.items])
+        return linesep.join([f"{i}\t{t}" for i, t in enumerate(self.items)])
 
     @dataclass
     class Item:
@@ -23,11 +22,7 @@ class TodoList:
         done: bool
 
         def __str__(self) -> str:
-            return (
-                "- "
-                + self.task
-                + (" (" + self.date + ")" if self.date is not None else "")
-            )
+            return self.task + (" (" + self.date + ")" if self.date is not None else "")
 
 
 @click.group()
