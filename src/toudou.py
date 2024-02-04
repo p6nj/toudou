@@ -30,40 +30,44 @@ class TodoList:
 
 @click.group()
 def cli():
-    pass
+    """Todo list manager (command-line version)."""
 
 
-@cli.group()
+@cli.group(short_help="make lists or tasks")
 def new():
-    pass
+    """Creates todo lists or tasks."""
 
 
-@cli.group("del")
+@cli.group("del", short_help="delete lists or tasks")
 def delete():
-    pass
+    """Deletes todo lists or tasks."""
 
 
-@cli.command()
+@cli.command(short_help="show tasks")
 @click.argument(
-    "list",
-    type=click.File("rb"),
-    default="default",
+    "list", type=click.File("rb"), default="default", metavar='[LIST="default"]'
 )
 def show(list):
+    """
+    Shows tasks from a list.
+    If no list name is given, show "default" tasks.
+    """
     print(load(list))
 
 
-@new.command("list")
+@new.command("list", short_help="create a list")
 @click.argument(
     "name",
     type=click.File("xb"),
     default="default",
+    metavar='[LIST="default"]',
 )
 def newlist(name):
+    """Creates a new list (file) in the current directory."""
     dump(TodoList(), name)
 
 
-@new.command("task")
+@new.command("task", short_help="add a task")
 @click.argument("task")
 @click.option(
     "-l",
@@ -71,9 +75,11 @@ def newlist(name):
     type=click.Path(True, True, readable=True, writable=True),
     default="default",
     help="The todo-list where to put this task.",
+    metavar='[LIST="default"]',
 )
 @click.option("-d", "--duefor", help="The date the task is due for.")
 def newtask(task: str, list, duefor=None):
+    """Creates a task and add it to the given list ("default" by default)."""
     with open(list, "rb") as file:
         todos = load(file)
     todos.items.append(TodoList.Item(task, duefor, False))
@@ -81,16 +87,18 @@ def newtask(task: str, list, duefor=None):
         dump(todos, file)
 
 
-@delete.command("task")
+@delete.command("task", short_help="delete a task")
 @click.argument("task", type=int)
 @click.option(
     "-l",
     "--list",
     type=click.Path(True, True, readable=True, writable=True),
     default="default",
-    help="The todo-list where to put this task.",
+    help="The todo-list where the task is.",
+    metavar='[LIST="default"]',
 )
 def deltask(task: int, list):
+    """Deletes a task from the given list ("default" by default)."""
     with open(list, "rb") as file:
         todos = load(file)
     todos.items.pop(task)
@@ -98,11 +106,16 @@ def deltask(task: int, list):
         dump(todos, file)
 
 
-@delete.command("list")
+@delete.command("list", short_help="delete a list")
 @click.argument(
     "name",
     type=click.Path(True, True, writable=True),
     default="default",
+    metavar='[LIST="default"]',
 )
 def dellist(name):
+    """
+    Deletes the given list ("default" by default).
+    Cannot be undone.
+    """
     remove(name)
