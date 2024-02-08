@@ -35,3 +35,39 @@ def updatetaskdesc(id: int, desc: str, list: str):
     todos.items[id].task = desc
     with open(list, "wb") as file:
         dump(todos, file)
+
+
+@click.command("do")
+@click.argument("id", type=int)
+@click.option(
+    "-l",
+    "--list",
+    type=click.Path(True, True, readable=True, writable=True),
+    default="default",
+    help="The todo-list where to put this task.",
+    metavar='[LIST="default"]',
+)
+def markdone(id: int, list: str):
+    with open(list, "rb") as file:
+        todos = load(file)
+    todos.items[id].done = True
+    with open(list, "wb") as file:
+        dump(todos, file)
+
+
+@click.command("undo")
+@click.argument("id", type=int)
+@click.option(
+    "-l",
+    "--list",
+    type=click.Path(True, True, readable=True, writable=True),
+    default="default",
+    help="The todo-list where to put this task.",
+    metavar='[LIST="default"]',
+)
+def markundone(id: int, list: str):
+    with open(list, "rb") as file:
+        todos = load(file)
+    todos.items[id].done = False
+    with open(list, "wb") as file:
+        dump(todos, file)
