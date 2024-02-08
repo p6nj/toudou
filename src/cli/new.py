@@ -1,6 +1,7 @@
 from .main import click
 from pickle import load, dump
 from classes.todolist import TodoList
+from datetime import datetime
 
 
 @click.group(short_help="make lists or tasks")
@@ -30,11 +31,17 @@ def newlist(name):
     help="The todo-list where to put this task.",
     metavar='[LIST="default"]',
 )
+@click.option(
+    "-d",
+    "--duefor",
+    type=click.DateTime(["%d/%m"]),
+    help="The date this task is due for.",
+)
 @click.option("-d", "--duefor", help="The date the task is due for.")
-def newtask(task: str, list, duefor=None):
+def newtask(task: str, list: str, duefor: datetime = None):
     """Creates a task and add it to the given list ("default" by default)."""
     with open(list, "rb") as file:
         todos = load(file)
-    todos.items.append(TodoList.Item(task, duefor, False))
+    todos.items.append(TodoList.Item(task, duefor.date(), False))
     with open(list, "wb") as file:
         dump(todos, file)

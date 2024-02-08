@@ -23,4 +23,8 @@ class TodoList:
         done: bool
 
         def __str__(self) -> str:
-            return self.task + (" (" + self.date + ")" if self.date is not None else "")
+            return self.task + (
+                " (" + self.date.strftime("%d/%m") + ")"
+                if self.date is not None
+                else ""
+            )
