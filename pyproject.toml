@@ -9,7 +9,7 @@ license = { text = "MIT" }
 
 
 [project.scripts]
-td = "toudou:cli"
+td = "toudou:main"
 
 
 [build-system]

@@ -6,12 +6,15 @@ from .update import rename, markdone, markundone
 from sqlite3 import connect
 
 
+def main():
+    cli(obj=connect("toudou.db").cursor())
+
+
 @click.group()
 @click.pass_context
 def cli(ctx):
     """Todo list manager (command-line version)."""
-    ctx.con = connect("toudou.db").cursor()
-    ctx.con.executescript(open("toudou.sql", "r").read())
+    ctx.obj.executescript(open("td.sql", "r").read())
 
 
 cli.add_command(new)

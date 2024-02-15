@@ -19,7 +19,8 @@ def new(ctx):
 )
 def newlist(ctx, name):
     """Creates a new list (file) in the current directory."""
-    ctx.con.execute(f"insert INTO list values ('{name}')")
+    ctx.obj.execute(f"insert into list values ('{name}')")
+    ctx.obj.connection.commit()
 
 
 @new.command("task", short_help="add a task")
