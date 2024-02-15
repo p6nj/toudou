@@ -3,11 +3,15 @@ from .create import new
 from .delete import delete
 from .read import show
 from .update import rename, markdone, markundone
+from sqlite3 import connect
 
 
 @click.group()
-def cli():
+@click.pass_context
+def cli(ctx):
     """Todo list manager (command-line version)."""
+    ctx.con = connect("toudou.db").cursor()
+    ctx.con.executescript(open("toudou.sql", "r").read())
 
 
 cli.add_command(new)

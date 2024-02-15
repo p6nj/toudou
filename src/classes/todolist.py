@@ -12,7 +12,7 @@ def strike(text):
 
 class TodoList:
     def __init__(self) -> None:
-        self.items: [TodoList.Item] = []
+        self.items = []
 
     def __str__(self) -> str:
         return (

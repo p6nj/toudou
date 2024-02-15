@@ -5,20 +5,21 @@ from datetime import datetime
 
 
 @click.group(short_help="make lists or tasks")
-def new():
+@click.pass_context
+def new(ctx):
     """Creates todo lists or tasks."""
 
 
 @new.command("list", short_help="create a list")
+@click.pass_context
 @click.argument(
     "name",
-    type=click.File("xb"),
     default="default",
     metavar='[LIST="default"]',
 )
-def newlist(name):
+def newlist(ctx, name):
     """Creates a new list (file) in the current directory."""
-    dump(TodoList(), name)
+    ctx.con.execute(f"insert INTO list values ('{name}')")
 
 
 @new.command("task", short_help="add a task")
