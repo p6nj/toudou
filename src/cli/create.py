@@ -46,5 +46,5 @@ def newlist(ctx, name):
 def newtask(ctx, task: str, list: str, duefor: datetime = None):
     """Creates a task and add it to the given list ("default" by default)."""
     target = TodoList(list, ctx.obj).pull()
-    target.items.append(TodoList.Item(inf, task, duefor, False))
+    target.items.append(TodoList.Item(None, task, duefor, False))
     target.push()

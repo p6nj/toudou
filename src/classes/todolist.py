@@ -43,14 +43,22 @@ class TodoList:
         for item in self.items:
             if item not in remote_items:
                 self.c.execute(
-                    "insert into task (desc, done, duefor, list) values (?, ?, ?, ?)",
-                    (item.task, item.done, item.date, self.name),
+                    "insert into task (id, desc, done, duefor, list) values (?, ?, ?, ?, ?)",
+                    (item.id, item.task, item.done, item.date, self.name),
                 )
         self.__commit__()
 
     def pull(self) -> Self:
         self.items = self.__check_remote__()
         return self
+
+    def nuke(self) -> None:
+        self.c.execute("delete from list where name=?", (self.name,))
+        self.__commit__()
+
+    def nuke_item(self, index: int) -> None:
+        self.c.execute("delete from task where list=? and id=?", (self.name, index))
+        self.__commit__()
 
     def __str__(self) -> str:
         return (
