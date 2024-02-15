@@ -1,7 +1,8 @@
-from .main import click
-from pickle import load, dump
+from math import inf
 from classes.todolist import TodoList
+from .main import click
 from datetime import datetime
+from click import ClickException
 
 
 @click.group(short_help="make lists or tasks")
@@ -19,16 +20,18 @@ def new(ctx):
 )
 def newlist(ctx, name):
     """Creates a new list (file) in the current directory."""
-    ctx.obj.execute(f"insert into list values ('{name}')")
-    ctx.obj.connection.commit()
+    target = TodoList(name, ctx.obj)
+    if target.exists():
+        raise ClickException("List already exists.")
+    target.create()
 
 
 @new.command("task", short_help="add a task")
+@click.pass_context
 @click.argument("task")
 @click.option(
     "-l",
     "--list",
-    type=click.Path(True, True, readable=True, writable=True),
     default="default",
     help="The todo-list where to put this task.",
     metavar='[LIST="default"]',
@@ -40,10 +43,8 @@ def newlist(ctx, name):
     help="The date this task is due for.",
 )
 @click.option("-d", "--duefor", help="The date the task is due for.")
-def newtask(task: str, list: str, duefor: datetime = None):
+def newtask(ctx, task: str, list: str, duefor: datetime = None):
     """Creates a task and add it to the given list ("default" by default)."""
-    with open(list, "rb") as file:
-        todos = load(file)
-    todos.items.append(TodoList.Item(task, duefor.date(), False))
-    with open(list, "wb") as file:
-        dump(todos, file)
+    target = TodoList(list, ctx.obj).pull()
+    target.items.append(TodoList.Item(inf, task, duefor, False))
+    target.push()

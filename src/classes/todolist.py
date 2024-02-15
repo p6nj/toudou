@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from datetime import date
 from os import linesep
+from sqlite3 import Cursor
+from typing import Self
 
 
 def strike(text):
@@ -11,8 +13,44 @@ def strike(text):
 
 
 class TodoList:
-    def __init__(self) -> None:
+    def __init__(self, name: str, cursor: Cursor) -> None:
         self.items = []
+        self.name = name
+        self.c = cursor
+
+    def __commit__(self) -> None:
+        self.c.connection.commit()
+
+    def exists(self) -> bool:
+        return self.c.execute(
+            "select 1 from list where name=?", (self.name,)
+        ).fetchone()
+
+    def create(self) -> None:
+        self.c.execute("insert into list values (?)", (self.name,))
+        self.__commit__()
+
+    def __check_remote__(self) -> list[tuple]:
+        return [
+            TodoList.Item(item[0], item[1], item[3], item[2])
+            for item in self.c.execute(
+                "select * from task where list=?", (self.name,)
+            ).fetchall()
+        ]
+
+    def push(self) -> None:
+        remote_items = self.__check_remote__()
+        for item in self.items:
+            if item not in remote_items:
+                self.c.execute(
+                    "insert into task (desc, done, duefor, list) values (?, ?, ?, ?)",
+                    (item.task, item.done, item.date, self.name),
+                )
+        self.__commit__()
+
+    def pull(self) -> Self:
+        self.items = self.__check_remote__()
+        return self
 
     def __str__(self) -> str:
         return (
@@ -25,6 +63,7 @@ class TodoList:
 
     @dataclass
     class Item:
+        id: int
         task: str
         date: date | None
         done: bool
