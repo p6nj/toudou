@@ -7,7 +7,7 @@ from sqlite3 import connect
 
 
 def main():
-    cli(obj=connect("toudou.db").cursor())
+    cli(obj=connect("td.db").cursor())
 
 
 @click.group()
