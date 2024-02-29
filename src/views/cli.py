@@ -1,14 +1,14 @@
 from math import inf
-from classes.todolist import TodoList
+from classes.todolist import Base
 import click
 from datetime import datetime
 from click import ClickException
-from sqlite3 import connect
+from sqlalchemy import create_engine
 
 
 def main():
     try:
-        cli(obj=connect("td.db").cursor())
+        cli(obj=create_engine("sqlite:///td.db", echo=True))
     except Exception as e:
         print(e)
         exit(0)
@@ -18,7 +18,13 @@ def main():
 @click.pass_context
 def cli(ctx):
     """Todo list manager (command-line version)."""
-    ctx.obj.executescript(open("td.sql", "r").read())
+    pass
+
+
+@cli.command()
+@click.pass_context
+def init(ctx):
+    Base.metadata.create_all(ctx.obj)
 
 
 @cli.group(short_help="make lists or tasks")
