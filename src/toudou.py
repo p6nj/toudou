@@ -1,1 +1,1 @@
-from cli.main import main
+from views.cli import main as cli

@@ -3,15 +3,21 @@ name = "Toudou"
 version = "0.1"
 description = "A simple task manager."
 readme = "README.md"
-dependencies = ["click>=8.1.7"]
+dependencies = [
+    "click>=8.1.7",
+    "flask>=3.0.2",
+    "sqlalchemy>=2.0.27",
+]
 requires-python = ">=3.10"
 license = { text = "MIT" }
 
 
 [project.scripts]
-td = "toudou:main"
+cli = "toudou:cli"
 
 
 [build-system]
 requires = ["pdm-pep517"]
 build-backend = "pdm.pep517.api"
+
+[tool.pdm]
