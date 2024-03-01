@@ -1,36 +1,35 @@
 from math import inf
-from classes.todolist import Base, List, Task, ListExistsError
+from models.todolist import (
+    Base,
+    List,
+    ListNotFoundError,
+    Task,
+    ListExistsError,
+    TaskNotFoundError,
+)
 import click
 from datetime import datetime
 from click import ClickException
 from sqlalchemy import create_engine
 
 
-def main():
-    cli(obj=create_engine("sqlite:///td.db", echo=True))
-
-
 @click.group()
-@click.pass_context
 def cli(ctx):
     """Todo list manager (command-line version)."""
     pass
 
 
 @cli.command()
-@click.pass_context
 def init(ctx):
     Base.metadata.create_all(ctx.obj)
 
 
 @cli.group(short_help="make lists or tasks")
-@click.pass_context
 def new(ctx):
     """Creates todo lists or tasks."""
 
 
 @new.command("list", short_help="create a list")
-@click.pass_context
 @click.argument(
     "name",
     default="default",
@@ -45,7 +44,6 @@ def newlist(ctx, name: str):
 
 
 @new.command("task", short_help="add a task")
-@click.pass_context
 @click.argument("task")
 @click.option(
     "-l",
@@ -63,19 +61,15 @@ def newlist(ctx, name: str):
 @click.option("-d", "--duefor", help="The date the task is due for.")
 def newtask(ctx, task: str, list: str, duefor: datetime = None):
     """Creates a task and add it to the given list ("default" by default)."""
-    target = TodoList(list, ctx.obj).pull()
-    target.items.append(TodoList.Item(None, task, duefor, False))
-    target.push()
+    Task.create(task, list, duefor)
 
 
 @cli.group("del", short_help="delete lists or tasks")
-@click.pass_context
 def delete(ctx):
     """Deletes todo lists or tasks."""
 
 
 @delete.command("task", short_help="delete a task")
-@click.pass_context
 @click.argument("task", type=int)
 @click.option(
     "-l",
@@ -86,11 +80,13 @@ def delete(ctx):
 )
 def deltask(ctx, task: int, list: str):
     """Deletes a task from the given list ("default" by default)."""
-    TodoList(list, ctx.obj).nuke_item(task)
+    try:
+        Task.delete(list, task)
+    except TaskNotFoundError:
+        print("Task does not exist.")
 
 
 @delete.command("list", short_help="delete a list")
-@click.pass_context
 @click.argument(
     "name",
     default="default",
@@ -101,7 +97,10 @@ def dellist(ctx, name: str):
     Deletes the given list ("default" by default).
     Cannot be undone.
     """
-    TodoList(name, ctx.obj).nuke()
+    try:
+        List.delete(name)
+    except ListNotFoundError:
+        print("List does not exist.")
 
 
 @cli.command()
@@ -115,7 +114,6 @@ def _import():
 
 
 @cli.command(short_help="show tasks")
-@click.pass_context
 @click.argument(
     "list",
     default="default",
@@ -126,7 +124,10 @@ def show(ctx, list: str):
     Shows tasks from a list.
     If no list name is given, show "default" tasks.
     """
-    print(TodoList(list, ctx).pull())
+    try:
+        print(List.read(list))
+    except ListNotFoundError:
+        print("List does not exist.")
 
 
 @cli.group()
@@ -141,9 +142,10 @@ def rename():
 )
 @click.argument("new", type=click.Path(False))
 def updatelist(old: str, new: str):
-    # TODO
-    pass
-    # mv(old, new)
+    try:
+        List.update(old, new)
+    except ListNotFoundError:
+        print("List does not exist.")
 
 
 @rename.command("task")
@@ -158,13 +160,10 @@ def updatelist(old: str, new: str):
     metavar='[LIST="default"]',
 )
 def updatetaskdesc(id: int, desc: str, list: str):
-    # TODO
-    pass
-    # with open(list, "rb") as file:
-    #     todos = load(file)
-    # todos.items[id].task = desc
-    # with open(list, "wb") as file:
-    #     dump(todos, file)
+    try:
+        Task.update(list, id, desc)
+    except TaskNotFoundError:
+        print("Task does not exist.")
 
 
 @click.command("do")
@@ -178,13 +177,10 @@ def updatetaskdesc(id: int, desc: str, list: str):
     metavar='[LIST="default"]',
 )
 def markdone(id: int, list: str):
-    # TODO
-    pass
-    # with open(list, "rb") as file:
-    #     todos = load(file)
-    # todos.items[id].done = True
-    # with open(list, "wb") as file:
-    #     dump(todos, file)
+    try:
+        Task.update(list, id, newdone=True)
+    except TaskNotFoundError:
+        print("Task does not exist.")
 
 
 @click.command("undo")
@@ -198,10 +194,7 @@ def markdone(id: int, list: str):
     metavar='[LIST="default"]',
 )
 def markundone(id: int, list: str):
-    # TODO
-    pass
-    # with open(list, "rb") as file:
-    #     todos = load(file)
-    # todos.items[id].done = False
-    # with open(list, "wb") as file:
-    #     dump(todos, file)
+    try:
+        Task.update(list, id, newdone=False)
+    except TaskNotFoundError:
+        print("Task does not exist.")

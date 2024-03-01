@@ -96,6 +96,8 @@ class List(Base):
         with Session(commit=True) as session:
             if list := List.exists(name, session):
                 session.delete(list)
+            else:
+                raise ListNotFoundError()
 
 
 class Task(Base):
@@ -152,6 +154,8 @@ class Task(Base):
         with Session(commit=True) as session:
             if task := Task.exists(id, list, session):
                 session.delete(task)
+            else:
+                raise TaskNotFoundError()
 
 
 List.tasks = relationship("Task", back_populates="list")
