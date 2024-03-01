@@ -6,6 +6,7 @@ from models.todolist import (
     Task,
     ListExistsError,
     TaskNotFoundError,
+    Session,
 )
 import click
 from datetime import datetime
@@ -20,6 +21,18 @@ def cli():
 @cli.command()
 def init():
     Base.metadata.create_all(engine)
+    newlist(["default"])
+
+
+@cli.command()
+def lists():
+    with Session() as session:
+        if lists := session.query(List).all():
+            print("Available lists :")
+            for list in lists:
+                print("- " + list.name)
+        else:
+            print('No list available. To create one, use "new list [name]".')
 
 
 @cli.group(short_help="make lists or tasks")
@@ -98,7 +111,7 @@ def dellist(name: str):
     try:
         List.delete(name)
     except ListNotFoundError:
-        print("List does not exist.")
+        print(f'"{name}" list does not exist.')
 
 
 @cli.command(short_help="show tasks")
@@ -115,7 +128,7 @@ def show(list: str):
     try:
         print(List.read(list))
     except ListNotFoundError:
-        print("List does not exist.")
+        print(f'"{list}" list does not exist.')
 
 
 @cli.group()
@@ -130,7 +143,7 @@ def updatelist(old: str, new: str):
     try:
         List.update(old, new)
     except ListNotFoundError:
-        print("List does not exist.")
+        print(f'"{old}" list does not exist.')
 
 
 @rename.command("task")
@@ -146,7 +159,7 @@ def updatetaskdesc(id: int, desc: str, list: str):
     try:
         Task.update(list, id, desc)
     except TaskNotFoundError:
-        print("Task does not exist.")
+        print(f'"{list}" list does not exist.')
 
 
 @cli.command("do")
