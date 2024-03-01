@@ -1,5 +1,5 @@
 from math import inf
-from classes.todolist import Base
+from classes.todolist import Base, List, Task, ListExistsError
 import click
 from datetime import datetime
 from click import ClickException
@@ -7,11 +7,7 @@ from sqlalchemy import create_engine
 
 
 def main():
-    try:
-        cli(obj=create_engine("sqlite:///td.db", echo=True))
-    except Exception as e:
-        print(e)
-        exit(0)
+    cli(obj=create_engine("sqlite:///td.db", echo=True))
 
 
 @click.group()
@@ -40,12 +36,12 @@ def new(ctx):
     default="default",
     metavar='[LIST="default"]',
 )
-def newlist(ctx, name):
+def newlist(ctx, name: str):
     """Creates a new list (file) in the current directory."""
-    target = TodoList(name, ctx.obj)
-    if target.exists():
-        raise ClickException("List already exists.")
-    target.create()
+    try:
+        List.create(name)
+    except ListExistsError as e:
+        print(f'"{name}" list already exists.')
 
 
 @new.command("task", short_help="add a task")
