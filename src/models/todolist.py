@@ -16,6 +16,7 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from datetime import datetime
+from py8fact import random_fact
 
 engine = create_engine("sqlite:///td.db")
 Base = declarative_base()
@@ -68,9 +69,7 @@ class List(Base):
         return (
             linesep.join([f"{t.id}\t{t}" for t in items])
             if items
-            else "The problem with doing nothing is not knowing when you're finished."
-            + linesep
-            + "\t\t-- Benjamin Franklin"
+            else "Nothing to do." + linesep + "Did you know? " + random_fact()
         )
 
     @staticmethod
