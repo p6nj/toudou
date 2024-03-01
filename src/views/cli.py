@@ -1,6 +1,6 @@
-from math import inf
 from models.todolist import (
     Base,
+    engine,
     List,
     ListNotFoundError,
     Task,
@@ -9,23 +9,21 @@ from models.todolist import (
 )
 import click
 from datetime import datetime
-from click import ClickException
-from sqlalchemy import create_engine
 
 
 @click.group()
-def cli(ctx):
+def cli():
     """Todo list manager (command-line version)."""
     pass
 
 
 @cli.command()
-def init(ctx):
-    Base.metadata.create_all(ctx.obj)
+def init():
+    Base.metadata.create_all(engine)
 
 
 @cli.group(short_help="make lists or tasks")
-def new(ctx):
+def new():
     """Creates todo lists or tasks."""
 
 
@@ -35,7 +33,7 @@ def new(ctx):
     default="default",
     metavar='[LIST="default"]',
 )
-def newlist(ctx, name: str):
+def newlist(name: str):
     """Creates a new list (file) in the current directory."""
     try:
         List.create(name)
@@ -59,13 +57,13 @@ def newlist(ctx, name: str):
     help="The date this task is due for.",
 )
 @click.option("-d", "--duefor", help="The date the task is due for.")
-def newtask(ctx, task: str, list: str, duefor: datetime = None):
+def newtask(task: str, list: str, duefor: datetime = None):
     """Creates a task and add it to the given list ("default" by default)."""
     Task.create(task, list, duefor)
 
 
 @cli.group("del", short_help="delete lists or tasks")
-def delete(ctx):
+def delete():
     """Deletes todo lists or tasks."""
 
 
@@ -78,7 +76,7 @@ def delete(ctx):
     help="The todo-list where the task is.",
     metavar='[LIST="default"]',
 )
-def deltask(ctx, task: int, list: str):
+def deltask(task: int, list: str):
     """Deletes a task from the given list ("default" by default)."""
     try:
         Task.delete(list, task)
@@ -92,7 +90,7 @@ def deltask(ctx, task: int, list: str):
     default="default",
     metavar='[LIST="default"]',
 )
-def dellist(ctx, name: str):
+def dellist(name: str):
     """
     Deletes the given list ("default" by default).
     Cannot be undone.
@@ -103,23 +101,13 @@ def dellist(ctx, name: str):
         print("List does not exist.")
 
 
-@cli.command()
-def export():
-    pass
-
-
-@cli.command("import")
-def _import():
-    pass
-
-
 @cli.command(short_help="show tasks")
 @click.argument(
     "list",
     default="default",
     metavar='[LIST="default"]',
 )
-def show(ctx, list: str):
+def show(list: str):
     """
     Shows tasks from a list.
     If no list name is given, show "default" tasks.
@@ -136,11 +124,8 @@ def rename():
 
 
 @rename.command("list")
-@click.argument(
-    "old",
-    type=click.Path(True, True, writable=True),
-)
-@click.argument("new", type=click.Path(False))
+@click.argument("old")
+@click.argument("new")
 def updatelist(old: str, new: str):
     try:
         List.update(old, new)
@@ -154,9 +139,7 @@ def updatelist(old: str, new: str):
 @click.option(
     "-l",
     "--list",
-    type=click.Path(True, True, readable=True, writable=True),
     default="default",
-    help="The todo-list where to put this task.",
     metavar='[LIST="default"]',
 )
 def updatetaskdesc(id: int, desc: str, list: str):
@@ -166,14 +149,12 @@ def updatetaskdesc(id: int, desc: str, list: str):
         print("Task does not exist.")
 
 
-@click.command("do")
+@cli.command("do")
 @click.argument("id", type=int)
 @click.option(
     "-l",
     "--list",
-    type=click.Path(True, True, readable=True, writable=True),
     default="default",
-    help="The todo-list where to put this task.",
     metavar='[LIST="default"]',
 )
 def markdone(id: int, list: str):
@@ -183,14 +164,12 @@ def markdone(id: int, list: str):
         print("Task does not exist.")
 
 
-@click.command("undo")
+@cli.command("undo")
 @click.argument("id", type=int)
 @click.option(
     "-l",
     "--list",
-    type=click.Path(True, True, readable=True, writable=True),
     default="default",
-    help="The todo-list where to put this task.",
     metavar='[LIST="default"]',
 )
 def markundone(id: int, list: str):
