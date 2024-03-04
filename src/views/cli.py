@@ -21,7 +21,10 @@ def cli():
 @cli.command()
 def init():
     Base.metadata.create_all(engine)
-    newlist(["default"])
+    try:
+        List.create("default")
+    except ListExistsError:
+        print("nothing to do.")
 
 
 @cli.command()
