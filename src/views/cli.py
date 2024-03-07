@@ -1,4 +1,4 @@
-from models.todolist import (
+from models import (
     Base,
     engine,
     List,
