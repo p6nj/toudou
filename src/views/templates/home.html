@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-GB">
+
+<iframe hidden name=htmz
+    onload="setTimeout(()=>document.querySelector(contentWindow.location.hash||null)?.replaceWith(...contentDocument.body.childNodes))"></iframe>
+<base target=htmz>
 
 <head>
     <title>Toudou - Accueil</title>
@@ -9,18 +13,37 @@
 
 <body>
     <header>
-        <nav><a href="/">Home</a></nav>
-        <h1>Home</h1>
+        <nav>
+            <a href="/" class="current">
+                <svg class="icon" viewBox="-0.1 -2.1 4.2 5.2">
+                    <path d="M 0 0 L 0 3 L 4 3 L 4 0 L 2 -2 L 0 0"></path>
+                </svg>
+                Home
+            </a>
+            <a href="/newlist">
+                <svg class="icon nofill" viewBox="-0.1 -0.1 2.2 2.2">
+                    <path d="M 0 1 L 2 1 M 1 0 L 1 2"></path>
+                </svg>
+                New list
+            </a>
+            {% for list in lists %}
+            <a href="/list/{{ list }}">{{ list }}</a>
+            {% endfor %}
+        </nav>
+        <h1>Toudou Home</h1>
     </header>
     <main>
         <p>
-            Welcome to the Toudou homepage.<br>Available lists :
-        <ul></ul>
+            Welcome home.
+            <br>Click a list above or create one to continue.
         </p>
     </main>
     <footer>
         <p>
-            Toudou is an <a href="https://unlicense.org/">Unlicensed</a> school project.<br>Breval Ferrari 2024
+            Toudou is an <a href="https://unlicense.org/">Unlicensed</a> school project using
+            <a href="https://simplecss.org/">Simple CSS</a> and
+            <a href="https://leanrada.com/htmz/">HTMZ</a>.
+            <br>&copy; 2024 Breval Ferrari
         </p>
     </footer>
 </body>
