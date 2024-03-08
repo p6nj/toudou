@@ -1,0 +1,17 @@
+<nav>
+    <a href="/" class="current">
+        <svg class="icon" viewBox="-0.1 -2.1 4.2 5.2">
+            <path d="M 0 0 L 0 3 L 4 3 L 4 0 L 2 -2 L 0 0"></path>
+        </svg>
+        Home
+    </a>
+    <a href="/newlist">
+        <svg class="icon nofill" viewBox="-0.1 -0.1 2.2 2.2">
+            <path d="M 0 1 L 2 1 M 1 0 L 1 2"></path>
+        </svg>
+        New list
+    </a>
+    {% for list in lists %}
+    <a href="/list/{{ list }}">{{ list }}</a>
+    {% endfor %}
+</nav>
