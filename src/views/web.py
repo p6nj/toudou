@@ -8,14 +8,16 @@ app = Flask(__name__)
 
 @app.route("/")
 def hello():
-    return render_template("index.html", header=header(), main=home())
+    return render_template("index.html", nav=nav(), main=home())
 
 
-@app.route("/header")
-def header():
+@app.route("/nav")
+def nav(*, newlist=False):
     with Session() as session:
         return render_template(
-            "header.htm", lists=[list.name for list in session.query(List).all()]
+            "nav.htm",
+            lists=[list.name for list in session.query(List).all()],
+            newlist=newlist,
         )
 
 
@@ -61,6 +63,15 @@ def updatetasks(list: str):
             if not task.done and task.id in donetasks:
                 Task.update(list, task.id, newdone=True)
     return tasks(list, action=False)
+
+
+@app.route("/newlist", methods=["POST", "GET"])
+def newlist():
+    if request.method == "GET":
+        return render_template("newlist.htm")
+    else:
+        List.create(request.form["name"])
+        return nav(newlist=True)
 
 
 # misc

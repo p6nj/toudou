@@ -12,10 +12,10 @@
 </head>
 
 <body>
-    <header id="header">
-        {# header is safe! :D #}
+    <header>
+        {# nav is safe! :D #}
         {# more seriously, "safe" turns off automatic HTML special chars escaping #}
-        {{ header|safe }}
+        {{ nav|safe }}
     </header>
     {# these includes reuse parts loaded on demand by HTMZ #}
     {{ main|safe }}
