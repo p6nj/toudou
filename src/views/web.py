@@ -1,5 +1,6 @@
 from flask import Flask, render_template, url_for, send_file
-from models import List, Session
+from models import List, Session, Task
+from py8fact import random_fact
 
 app = Flask(__name__)
 
@@ -24,6 +25,16 @@ def header(*, new: bool = False, current: str = None):
 @app.route("/home")
 def home():
     return render_template("home.htm")
+
+
+@app.route("/list/<name>")
+def list(name: str):
+    with Session() as session:
+        return render_template(
+            "list.htm",
+            tasks=session.query(Task).filter_by(list=name).all(),
+            fact=random_fact(),
+        )
 
 
 # misc

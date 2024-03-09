@@ -1,0 +1,24 @@
+<main id="content">
+    <h2>Tasks</h2>
+    {% if not tasks %}
+    <p>
+        There isn't any task in this list.
+    </p>
+    <details>
+        <summary>Random fact</summary>
+        <p>{{ fact }}</p>
+    </details>
+    {% else %}
+    {% for task in tasks %}
+    {% endif %}
+    <h2>New task</h2>
+    <p>
+        Got something to do? Just fill the form below and submit.
+    </p>
+    <form action="" method="post">
+        <p>
+            <label>Description</label>
+            <input type="text" name="desc" value="touch grass">
+        </p>
+    </form>
+</main>

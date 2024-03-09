@@ -12,15 +12,13 @@
 </head>
 
 <body>
-    <header>
+    <header id="header">
         {# header is safe! :D #}
         {# more seriously, "safe" turns off automatic HTML special chars escaping #}
         {{ header|safe }}
     </header>
-    <main>
-        {# these includes reuse parts loaded on demand by HTMZ #}
-        {{ main|safe }}
-    </main>
+    {# these includes reuse parts loaded on demand by HTMZ #}
+    {{ main|safe }}
     <footer>
         <p>
             Toudou is an <a href="https://unlicense.org/">Unlicensed</a> school project using

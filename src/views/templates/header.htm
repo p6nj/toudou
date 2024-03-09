@@ -12,7 +12,7 @@
         New list
     </a>
     {% for list in lists %}
-    <a href="/list/{{ list }}" {% if current and list==current %}class="current" {% endif %}>{{ list }}</a>
+    <a href="/list/{{ list }}#content" {% if current and list==current %}class="current" {% endif %}>{{ list }}</a>
     {% endfor %}
 </nav>
 <h1>
