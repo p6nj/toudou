@@ -51,6 +51,18 @@ def tasks(list: str, *, action=True):
         )
 
 
+@app.post("/update/<list>")
+def updatetasks(list: str):
+    donetasks = [int(taskid) for taskid in request.form]
+    with Session() as session:
+        for task in session.query(Task).filter_by(list=list).all():
+            if task.done and task.id not in donetasks:
+                Task.update(list, task.id, newdone=False)
+            if not task.done and task.id in donetasks:
+                Task.update(list, task.id, newdone=True)
+    return tasks(list, action=False)
+
+
 # misc
 @app.route("/favicon.ico")
 def favicon():
