@@ -74,6 +74,12 @@ def newlist():
         return nav(newlist=True)
 
 
+@app.route("/dellist/<list>")
+def dellist(list: str):
+    List.delete(list)
+    return home()
+
+
 # misc
 @app.route("/favicon.ico")
 def favicon():

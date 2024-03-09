@@ -12,12 +12,12 @@
         {% for task in tasks %}
         <p>
             <label>
-                <input type="checkbox" name="{{ task.id }}" {% if task.done %}checked{% endif %}>
+                <input type="checkbox" name="{{ task.id }}" onclick="document.forms[0].submit()" {% if task.done
+                    %}checked{% endif %}>
                 {{ task.desc }}{% if task.duefor %} ({{ task.duefor }}){% endif %}
             </label>
         </p>
         {% endfor %}
-        <button type="submit">Save changes</button>
     </form>
     {% endif %}
 </article>
