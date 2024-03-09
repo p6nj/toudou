@@ -1,4 +1,5 @@
-from flask import Flask, render_template, url_for, send_file
+from datetime import datetime
+from flask import Flask, render_template, request, url_for, send_file
 from models import List, Session, Task
 from py8fact import random_fact
 
@@ -26,11 +27,26 @@ def home():
 
 @app.route("/list/<name>")
 def list(name: str):
+    return render_template("list.htm", tasks=tasks(name, action=False), list=name)
+
+
+@app.post("/tasks/<list>")
+def tasks(list: str, *, action=True):
+    if action:
+        Task.create(
+            request.form["desc"],
+            list,
+            (
+                datetime.strptime(request.form["duefor"], "%Y-%m-%d")
+                if request.form["duefor"]
+                else None
+            ),
+        )
     with Session() as session:
         return render_template(
-            "list.htm",
-            list=name,
-            tasks=session.query(Task).filter_by(list=name).all(),
+            "tasks.htm",
+            list=list,
+            tasks=session.query(Task).filter_by(list=list).all(),
             fact=random_fact(),
         )
 
