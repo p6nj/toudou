@@ -1,5 +1,12 @@
+{# reset links and set clicked link as current link #}
+<script>
+    window.onload = () => Array.from(document.getElementsByTagName('a')).forEach(e => e.onclick = () => {
+        Array.from(document.getElementsByClassName('current')).forEach(e => e.removeAttribute('class'));
+        e.setAttribute('class', 'current');
+    });
+</script>
 <nav>
-    <a href="/home#content">
+    <a href="/home#content" class="current">
         <svg class="icon" viewBox="-0.1 -2.1 4.2 5.2">
             <path d="M 0 0 L 0 3 L 4 3 L 4 0 L 2 -2 L 0 0"></path>
         </svg>
