@@ -10,14 +10,11 @@ def hello():
     return render_template("index.html", header=header(), main=home())
 
 
-@app.route("/header/<int:new>/<current>")
-def header(*, new: bool = False, current: str = None):
+@app.route("/header")
+def header():
     with Session() as session:
         return render_template(
-            "header.htm",
-            lists=[list.name for list in session.query(List).all()],
-            new=new,
-            current=current,
+            "header.htm", lists=[list.name for list in session.query(List).all()]
         )
 
 
@@ -32,6 +29,7 @@ def list(name: str):
     with Session() as session:
         return render_template(
             "list.htm",
+            list=name,
             tasks=session.query(Task).filter_by(list=name).all(),
             fact=random_fact(),
         )

@@ -1,26 +1,17 @@
 <nav>
-    <a href="/" {% if not current and not new %}class="current" {% endif %}>
+    <a href="/home#content">
         <svg class="icon" viewBox="-0.1 -2.1 4.2 5.2">
             <path d="M 0 0 L 0 3 L 4 3 L 4 0 L 2 -2 L 0 0"></path>
         </svg>
         Home
     </a>
-    <a href="/newlist" {% if new %}class="current" {% endif %}>
+    <a href="/newlist#content">
         <svg class="icon nofill" viewBox="-0.1 -0.1 2.2 2.2">
             <path d="M 0 1 L 2 1 M 1 0 L 1 2"></path>
         </svg>
         New list
     </a>
     {% for list in lists %}
-    <a href="/list/{{ list }}#content" {% if current and list==current %}class="current" {% endif %}>{{ list }}</a>
+    <a href="/list/{{ list }}#content">{{ list }}</a>
     {% endfor %}
 </nav>
-<h1>
-    {% if current %}
-    {{ current }} list
-    {% elif new %}
-    New list
-    {% else %}
-    Toudou home
-    {% endif %}
-</h1>

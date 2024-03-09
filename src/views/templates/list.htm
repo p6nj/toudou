@@ -1,5 +1,5 @@
 <main id="content">
-    <h2>Tasks</h2>
+    <h1>{{ list }} List</h1>
     {% if not tasks %}
     <p>
         There isn't any task in this list.
@@ -9,7 +9,17 @@
         <p>{{ fact }}</p>
     </details>
     {% else %}
-    {% for task in tasks %}
+    <form>
+        {% for task in tasks %}
+        <p>
+            <label>
+                <input type="checkbox" id="{{ task.id }}" {% if task.done %}checked{% endif %}>
+                {{ task.desc }}
+            </label>
+        </p>
+        {% endfor %}
+        <button type="submit">Save changes</button>
+    </form>
     {% endif %}
     <h2>New task</h2>
     <p>
