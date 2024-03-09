@@ -80,6 +80,12 @@ def dellist(list: str):
     return nav()
 
 
+@app.route("/deltask/<list>/<int:task>")
+def deltask(list: str, task: int):
+    Task.delete(list, task)
+    return tasks(list, action=False)
+
+
 # misc
 @app.route("/favicon.ico")
 def favicon():

@@ -15,6 +15,7 @@
                 <input type="checkbox" name="{{ task.id }}" onclick="document.forms[0].submit()" {% if task.done
                     %}checked{% endif %}>
                 {{ task.desc }}{% if task.duefor %} ({{ task.duefor }}){% endif %}
+                <a href="/deltask/{{ list }}/{{ task.id }}#tasks">X</a>
             </label>
         </p>
         {% endfor %}
