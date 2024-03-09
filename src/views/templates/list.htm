@@ -2,7 +2,7 @@
     <h2>{{ list }} List</h2>
     {# this section will be updated by the form below #}
     {{ tasks|safe }}
-    <h2>New task</h2>
+    <h2>New Task</h2>
     <p>
         Got something to do? Just fill the form below and submit.
     </p>
@@ -20,4 +20,9 @@
             <button type="reset">Reset</button>
         </p>
     </form>
+    <h2>Danger Zone</h2>
+    <p>
+        <a class="button" href="/dellist/{{ list }}#nav"
+            onclick="document.getElementById('content').innerHTML='<p>This list was deleted.</p>'">Delete this list</a>
+    </p>
 </main>

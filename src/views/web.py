@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 
 @app.route("/")
-def hello():
+def index():
     return render_template("index.html", nav=nav(), main=home())
 
 
@@ -77,7 +77,7 @@ def newlist():
 @app.route("/dellist/<list>")
 def dellist(list: str):
     List.delete(list)
-    return home()
+    return nav()
 
 
 # misc
