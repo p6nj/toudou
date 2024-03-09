@@ -13,15 +13,13 @@
 
 <body>
     <header>
-        {# nav is safe! :D #}
-        {{ nav|safe }}
-        <h1>Toudou Home</h1>
+        {# header is safe! :D #}
+        {# more seriously, "safe" turns off automatic HTML special chars escaping #}
+        {{ header|safe }}
     </header>
     <main>
-        <p>
-            Welcome home.
-            <br>Click a list above or create one to continue.
-        </p>
+        {# these includes reuse parts loaded on demand by HTMZ #}
+        {{ main|safe }}
     </main>
     <footer>
         <p>
