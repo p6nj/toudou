@@ -10,6 +10,7 @@ from models import (
 )
 import click
 from datetime import datetime
+from services.csv import export as exportcsv
 
 
 @click.group()
@@ -193,3 +194,11 @@ def markundone(id: int, list: str):
         Task.update(list, id, newdone=False)
     except TaskNotFoundError:
         print("Task does not exist.")
+
+
+@cli.command("export")
+@click.argument(
+    "file", default="export.csv", metavar='[FILE="export.csv"]', type=click.File("xw")
+)
+def export(file):
+    file.write(exportcsv())
