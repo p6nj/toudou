@@ -86,6 +86,23 @@ def deltask(list: str, task: int):
     return tasks(list, action=False)
 
 
+@app.post("/modtask/<list>/<int:task>")
+def modtask(list: str, task: int):
+    Task.update(
+        list,
+        task,
+        newdesc=request.form["desc"],
+        newduefor=(
+            datetime.strptime(request.form["duefor"], "%Y-%m-%d")
+            if "yesdate" in request.form
+            and "duefor" in request.form
+            and request.form["duefor"]
+            else False
+        ),
+    )
+    return tasks(list, action=False)
+
+
 # misc
 @app.route("/favicon.ico")
 def favicon():

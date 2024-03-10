@@ -161,8 +161,8 @@ class Task(Base):
                     task.desc = newdesc
                 if newdone is not None:
                     task.done = newdone
-                if newduefor:
-                    task.duefor = newduefor
+                if newduefor is not None:
+                    task.duefor = newduefor if newduefor else None
             else:
                 raise TaskNotFoundError()
 
