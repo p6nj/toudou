@@ -1,7 +1,7 @@
 {# reset links and set clicked link as current link #}
 {# somehow this doesn't work after creating new lists, maybe htmz shenanigans #}
 <script>
-    window.onload = () => Array.from(document.getElementsByTagName('a')).forEach(a => a.onclick = () => {
+    window.onload = () => Array.from(document.querySelectorAll('a:not(.nochoose)')).forEach(a => a.onclick = () => {
         Array.from(document.getElementsByClassName('current')).forEach(current => current.removeAttribute('class'));
         a.setAttribute('class', 'current');
     });
@@ -22,4 +22,6 @@
     {% for list in lists %}
     <a href="/list/{{ list }}#content">{{ list }}</a>
     {% endfor %}
+    <a class="nochoose" href="/download">CSV 🠋</a>
+    <a class="nochoose" href="/upload">CSV 🠉</a>
 </nav>

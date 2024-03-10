@@ -1,7 +1,9 @@
 from datetime import datetime
+from io import BytesIO
 from flask import Flask, render_template, request, url_for, send_file
 from models import List, Session, Task
 from py8fact import random_fact
+from services.csv import export as exportcsv, _import as importcsv
 
 app = Flask(__name__)
 
@@ -108,6 +110,16 @@ def modlist(list: str):
     print(request.form["name"])
     List.update(list, request.form["name"])
     return nav()
+
+
+@app.route("/download")
+def downloadcsv():
+    buffer = BytesIO()
+    buffer.write(exportcsv().encode("utf-8"))
+    buffer.seek(0)
+    return send_file(
+        buffer, as_attachment=True, download_name="toudou.csv", mimetype="text/csv"
+    )
 
 
 # misc
