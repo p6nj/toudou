@@ -103,6 +103,13 @@ def modtask(list: str, task: int):
     return tasks(list, action=False)
 
 
+@app.post("/modlist/<list>")
+def modlist(list: str):
+    print(request.form["name"])
+    List.update(list, request.form["name"])
+    return nav()
+
+
 # misc
 @app.route("/favicon.ico")
 def favicon():

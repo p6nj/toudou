@@ -21,6 +21,16 @@
         </p>
     </form>
     <h2>Danger Zone</h2>
+    {# couldn't find a way to make this form change the page on submit just like the "delete" button... #}
+    <form action="/modlist/{{ list }}#nav" method="post"
+        onsubmit="document.getElementById('rename').appendChild(document.createTextNode('List renamed! Please reload this page.'))">
+        <p>
+            <label id="rename">
+                <input type="text" name="name" value="{{ list }}">
+                <button type="submit">Rename</button>
+            </label>
+        </p>
+    </form>
     <p>
         <a class="button" href="/dellist/{{ list }}#nav"
             onclick="document.getElementById('content').innerHTML='<p>This list was deleted.</p>'">Delete this list</a>

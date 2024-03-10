@@ -1,6 +1,4 @@
 from contextlib import contextmanager
-from dataclasses import dataclass
-from datetime import date
 from os import linesep
 from typing import Self
 from sqlalchemy import (
@@ -11,7 +9,6 @@ from sqlalchemy import (
     Integer,
     String,
     create_engine,
-    select,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
