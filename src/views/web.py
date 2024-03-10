@@ -1,5 +1,6 @@
 from datetime import datetime
 from io import BytesIO
+from os import linesep
 from flask import Flask, render_template, request, url_for, send_file
 from models import List, Session, Task
 from py8fact import random_fact
@@ -58,6 +59,7 @@ def tasks(list: str, *, action=True):
 @app.post("/update/<list>")
 def updatetasks(list: str):
     donetasks = [int(taskid) for taskid in request.form]
+    print(donetasks)
     with Session() as session:
         for task in session.query(Task).filter_by(list=list).all():
             if task.done and task.id not in donetasks:
@@ -120,6 +122,14 @@ def downloadcsv():
     return send_file(
         buffer, as_attachment=True, download_name="toudou.csv", mimetype="text/csv"
     )
+
+
+@app.post("/upload")
+def upload():
+    importcsv(
+        linesep.join(request.files["file"].read().decode("utf-8").splitlines()[1:])
+    )
+    return render_template("okimport.htm")
 
 
 # misc

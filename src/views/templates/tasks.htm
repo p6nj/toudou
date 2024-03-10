@@ -12,8 +12,8 @@
     {% for task in tasks %}
     <p>
         <label id="{{ task.id }}">
-            <input type="checkbox" name="{{ task.id }}" onclick="document.forms[0].submit()" {% if task.done %}checked{%
-                endif %}>
+            <input type="checkbox" name="{{ task.id }}" onchange="document.forms['update'].submit()" {% if task.done
+                %}checked{% endif %} form="update">
             {{ task.desc }}{% if task.duefor %} ({{ task.duefor }}){% endif %}
             <a href=""
                 onclick="document.getElementById('{{ task.id }}').innerHTML=`<form action='/modtask/{{ list }}/{{ task.id }}#tasks' method='post'><input type='text' name='desc' value='{{ task.desc }}'>include date?<input type='checkbox' name='yesdate' {% if task.duefor %}checked{% endif %}><input type='date' name='duefor' value='{{ task.duefor }}'><button type='submit'>Submit</button><button type='reset'>Reset</button></form>`">🖉</a>

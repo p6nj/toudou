@@ -47,4 +47,6 @@ def _import(csv: str):
         try:
             Task.create(desc, list, date, id=task, done=done)
         except TaskExistsError as e:
-            print("task already exists: " + str(e))
+            print("task already exists, replacing: " + str(e))
+            Task.delete(list, task)
+            Task.create(desc, list, date, id=task, done=done)

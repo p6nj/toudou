@@ -23,5 +23,8 @@
     <a href="/list/{{ list }}#content">{{ list }}</a>
     {% endfor %}
     <a class="nochoose" href="/download">CSV 🠋</a>
-    <a class="nochoose" href="/upload">CSV 🠉</a>
+    <a class="nochoose" href="" onclick="document.getElementById('file').click()">CSV 🠉</a>
+    <form action="/upload#content" method="post" style="display: none;" enctype="multipart/form-data" id="upload">
+        <input type="file" name="file" id="file" onchange="document.forms['upload'].submit()">
+    </form>
 </nav>
