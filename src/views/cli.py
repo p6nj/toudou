@@ -1,3 +1,4 @@
+from sys import stdin, stdout
 from models import (
     Base,
     engine,
@@ -10,7 +11,7 @@ from models import (
 )
 import click
 from datetime import datetime
-from services.csv import export as exportcsv
+from services.csv import export as exportcsv, _import as importcsv
 
 
 @click.group()
@@ -197,8 +198,15 @@ def markundone(id: int, list: str):
 
 
 @cli.command("export")
-@click.argument(
-    "file", default="export.csv", metavar='[FILE="export.csv"]', type=click.File("xw")
-)
-def export(file):
+# got this trick from https://stackoverflow.com/a/59830073
+@click.argument("file", default=stdout, metavar="[FILE=stdout]", type=click.File("w"))
+def csvexport(file):
+    """Export as CSV to stdout or to a file."""
     file.write(exportcsv())
+
+
+@cli.command("import")
+@click.argument("file", default=stdin, metavar="[FILE=stdin]", type=click.File("r"))
+def csvimport(file):
+    """Import as CSV from stdin or from a file."""
+    importcsv("".join(file.readlines()[1:]))

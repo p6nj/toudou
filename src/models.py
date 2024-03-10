@@ -49,6 +49,10 @@ class ListNotFoundError(Exception):
     pass
 
 
+class TaskExistsError(Exception):
+    pass
+
+
 class TaskNotFoundError(Exception):
     pass
 
@@ -80,7 +84,7 @@ class List(Base):
                 new_list = List(name=name)
                 session.add(new_list)
             else:
-                raise ListExistsError(list)
+                raise ListExistsError(name)
 
     @staticmethod
     def read(name: str) -> Self:
@@ -88,7 +92,7 @@ class List(Base):
             if list := List.exists(name, session):
                 return list
             else:
-                raise ListNotFoundError()
+                raise ListNotFoundError(name)
 
     @staticmethod
     def update(name: str, newname: str):
@@ -96,7 +100,7 @@ class List(Base):
             if list := List.exists(name, session):
                 list.name = newname
             else:
-                raise ListNotFoundError()
+                raise ListNotFoundError(name)
 
     @staticmethod
     def delete(name: str):
@@ -104,7 +108,7 @@ class List(Base):
             if list := List.exists(name, session):
                 session.delete(list)
             else:
-                raise ListNotFoundError()
+                raise ListNotFoundError(name)
 
 
 class Task(Base):
@@ -131,10 +135,13 @@ class Task(Base):
         return session.query(Task).filter_by(list=list, id=id).first()
 
     @staticmethod
-    def create(desc: str, list: str, duefor: datetime = None):
+    def create(desc: str, list: str, duefor: datetime = None, id=None, done=None):
         with Session(commit=True) as session:
-            task = Task(desc=desc, list=list, duefor=duefor)
-            session.add(task)
+            if not id or not Task.exists(id, list, session):
+                task = Task(desc=desc, list=list, duefor=duefor, id=id, done=done)
+                session.add(task)
+            else:
+                raise TaskExistsError(id)
 
     @staticmethod
     def read(list, id) -> Self:
@@ -142,7 +149,7 @@ class Task(Base):
             if task := Task.exists(id, list, session):
                 return task
             else:
-                raise TaskNotFoundError()
+                raise TaskNotFoundError(id)
 
     @staticmethod
     def update(
@@ -161,7 +168,7 @@ class Task(Base):
                 if newduefor is not None:
                     task.duefor = newduefor if newduefor else None
             else:
-                raise TaskNotFoundError()
+                raise TaskNotFoundError(id)
 
     @staticmethod
     def delete(list: str, id: int):
@@ -169,7 +176,7 @@ class Task(Base):
             if task := Task.exists(id, list, session):
                 session.delete(task)
             else:
-                raise TaskNotFoundError()
+                raise TaskNotFoundError(id)
 
 
 List.tasks = relationship(
