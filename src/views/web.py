@@ -1,20 +1,26 @@
 from datetime import datetime
 from io import BytesIO
 from os import linesep
-from flask import Flask, render_template, request, url_for, send_file
+from flask import render_template, request, send_file, Blueprint
 from models import List, Session, Task
 from py8fact import random_fact
 from services.csv import export as exportcsv, _import as importcsv
 
-app = Flask(__name__)
+web_ui = Blueprint(
+    "web_ui",
+    __name__,
+    url_prefix="/",
+    static_url_path="static",
+    template_folder="templates",
+)
 
 
-@app.route("/")
+@web_ui.route("/")
 def index():
     return render_template("index.html", nav=nav(), main=home())
 
 
-@app.route("/nav")
+@web_ui.route("/nav")
 def nav(*, newlist=False):
     with Session() as session:
         return render_template(
@@ -25,17 +31,17 @@ def nav(*, newlist=False):
 
 
 # main fillers
-@app.route("/home")
+@web_ui.route("/home")
 def home():
     return render_template("home.htm")
 
 
-@app.route("/list/<name>")
+@web_ui.route("/list/<name>")
 def list(name: str):
     return render_template("list.htm", tasks=tasks(name, action=False), list=name)
 
 
-@app.post("/tasks/<list>")
+@web_ui.post("/tasks/<list>")
 def tasks(list: str, *, action=True):
     if action:
         Task.create(
@@ -56,7 +62,7 @@ def tasks(list: str, *, action=True):
         )
 
 
-@app.post("/update/<list>")
+@web_ui.post("/update/<list>")
 def updatetasks(list: str):
     donetasks = [int(taskid) for taskid in request.form]
     print(donetasks)
@@ -69,7 +75,7 @@ def updatetasks(list: str):
     return tasks(list, action=False)
 
 
-@app.route("/newlist", methods=["POST", "GET"])
+@web_ui.route("/newlist", methods=["POST", "GET"])
 def newlist():
     if request.method == "GET":
         return render_template("newlist.htm")
@@ -78,19 +84,19 @@ def newlist():
         return nav(newlist=True)
 
 
-@app.route("/dellist/<list>")
+@web_ui.route("/dellist/<list>")
 def dellist(list: str):
     List.delete(list)
     return nav()
 
 
-@app.route("/deltask/<list>/<int:task>")
+@web_ui.route("/deltask/<list>/<int:task>")
 def deltask(list: str, task: int):
     Task.delete(list, task)
     return tasks(list, action=False)
 
 
-@app.post("/modtask/<list>/<int:task>")
+@web_ui.post("/modtask/<list>/<int:task>")
 def modtask(list: str, task: int):
     Task.update(
         list,
@@ -107,14 +113,14 @@ def modtask(list: str, task: int):
     return tasks(list, action=False)
 
 
-@app.post("/modlist/<list>")
+@web_ui.post("/modlist/<list>")
 def modlist(list: str):
     print(request.form["name"])
     List.update(list, request.form["name"])
     return nav()
 
 
-@app.route("/download")
+@web_ui.route("/download")
 def downloadcsv():
     buffer = BytesIO()
     buffer.write(exportcsv().encode("utf-8"))
@@ -124,20 +130,9 @@ def downloadcsv():
     )
 
 
-@app.post("/upload")
+@web_ui.post("/upload")
 def upload():
     importcsv(
         linesep.join(request.files["file"].read().decode("utf-8").splitlines()[1:])
     )
     return render_template("okimport.htm")
-
-
-# misc
-@app.route("/favicon.ico")
-def favicon():
-    return send_file("static/favicon.ico")
-
-
-# static files
-with app.test_request_context():
-    url_for("static", filename="custom.css")
