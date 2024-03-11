@@ -14,7 +14,7 @@ license = { text = "MIT" }
 
 
 [project.scripts]
-cli = "toudou:cli"
+toudou = "toudou:cli"
 web = "toudou:app"
 
 
