@@ -80,8 +80,12 @@ def newlist():
     if request.method == "GET":
         return render_template("newlist.htm")
     else:
-        List.create(request.form["name"])
-        return nav(newlist=True)
+        try:
+            List.create(request.form["name"])
+        except:
+            pass
+        finally:
+            return nav(newlist=True)
 
 
 @web_ui.route("/dellist/<list>")
