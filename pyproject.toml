@@ -15,11 +15,12 @@ license = { text = "MIT" }
 
 [project.scripts]
 toudou = "toudou:cli"
-web = "toudou:app"
 
 
 [build-system]
 requires = ["pdm-pep517"]
 build-backend = "pdm.pep517.api"
 
-[tool.pdm]
+[tool.pdm.scripts]
+'_'.env_file = "dev.env"
+start = "flask --app toudou.views --debug run"

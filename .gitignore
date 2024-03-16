@@ -4,5 +4,6 @@ pdm.lock
 *.pyc
 test
 default
-td.db
 *.zip
+test.*
+*.db

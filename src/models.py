@@ -14,8 +14,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from datetime import datetime
 from py8fact import random_fact
+from common import config
 
-engine = create_engine("sqlite:///td.db")
+engine = create_engine(config["DATABASE_URL"], echo=config["DEBUG"])
 Base = declarative_base()
 ToudouDBSession = sessionmaker(bind=engine)
 
