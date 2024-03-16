@@ -12,7 +12,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
-from datetime import datetime
+from datetime import date
 from py8fact import random_fact
 from common import config
 
@@ -136,7 +136,7 @@ class Task(Base):
         return session.query(Task).filter_by(list=list, id=id).first()
 
     @staticmethod
-    def create(desc: str, list: str, duefor: datetime = None, id=None, done=None):
+    def create(desc: str, list: str, duefor: date = None, id=None, done=None):
         with Session(commit=True) as session:
             if not id or not Task.exists(id, list, session):
                 task = Task(desc=desc, list=list, duefor=duefor, id=id, done=done)
@@ -158,7 +158,7 @@ class Task(Base):
         id: int,
         newdesc: str = None,
         newdone: bool = None,
-        newduefor: datetime = None,
+        newduefor: date = None,
     ):
         with Session(commit=True) as session:
             if task := Task.exists(id, list, session):

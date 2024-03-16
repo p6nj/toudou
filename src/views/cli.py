@@ -10,7 +10,7 @@ from models import (
     Session,
 )
 import click
-from datetime import datetime
+from datetime import date
 from services.csv import export as exportcsv, _import as importcsv
 
 
@@ -75,7 +75,7 @@ def newlist(name: str):
     help="The date this task is due for.",
 )
 @click.option("-d", "--duefor", help="The date the task is due for.")
-def newtask(task: str, list: str, duefor: datetime = None):
+def newtask(task: str, list: str, duefor: date = None):
     """Creates a task and add it to the given list ("default" by default)."""
     Task.create(task, list, duefor)
 

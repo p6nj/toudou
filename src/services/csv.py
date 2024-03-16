@@ -1,6 +1,6 @@
 from models import List, ListExistsError, Session, Task, TaskExistsError
 from os import linesep
-from datetime import datetime
+from datetime import date
 
 
 # cute little function
@@ -37,7 +37,7 @@ def _import(csv: str):
         task = int(line[1])
         desc = line[2]
         done = bool(int(line[3]))
-        date = datetime.strptime(line[4], "%Y-%m-%d") if line[4] else None
+        date = date.strptime(line[4], "%Y-%m-%d") if line[4] else None
         if list not in lists:
             try:
                 List.create(list)

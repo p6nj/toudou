@@ -1,10 +1,11 @@
-from datetime import datetime
+from datetime import date
 from io import BytesIO
 from os import linesep
 from flask import render_template, request, send_file, Blueprint
 from models import List, Session, Task
 from py8fact import random_fact
 from services.csv import export as exportcsv, _import as importcsv
+from . import forms
 
 web_ui = Blueprint(
     "web_ui",
@@ -38,21 +39,21 @@ def home():
 
 @web_ui.route("/list/<name>")
 def list(name: str):
-    return render_template("list.htm", tasks=tasks(name, action=False), list=name)
+    return render_template(
+        "list.htm", tasks=tasks(name, action=False), list=name, form=forms.NewTask()
+    )
 
 
 @web_ui.post("/tasks/<list>")
 def tasks(list: str, *, action=True):
     if action:
-        Task.create(
-            request.form["desc"],
-            list,
-            (
-                datetime.strptime(request.form["duefor"], "%Y-%m-%d")
-                if request.form["duefor"]
-                else None
-            ),
-        )
+        form = forms.NewTask()
+        if form.validate_on_submit():
+            Task.create(
+                form.desc.data,
+                list,
+                form.duefor.data,
+            )
     with Session() as session:
         return render_template(
             "tasks.htm",
@@ -107,7 +108,7 @@ def modtask(list: str, task: int):
         task,
         newdesc=request.form["desc"],
         newduefor=(
-            datetime.strptime(request.form["duefor"], "%Y-%m-%d")
+            date.strptime(request.form["duefor"], "%Y-%m-%d")
             if "yesdate" in request.form
             and "duefor" in request.form
             and request.form["duefor"]
