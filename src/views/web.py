@@ -1,11 +1,18 @@
 from datetime import date
 from io import BytesIO
 from os import linesep
+import traceback
 from flask import render_template, request, send_file, Blueprint
-from models import List, Session, Task
+from models import List, ListExistsError, Session, Task
 from py8fact import random_fact
 from services.csv import export as exportcsv, _import as importcsv
-from . import forms
+from .forms import (
+    Task as TaskForm,
+    List as ListForm,
+    TaskMod as TaskModificationForm,
+    ListMod as ListModificationForm,
+)
+from common import config
 
 web_ui = Blueprint(
     "web_ui",
@@ -40,14 +47,18 @@ def home():
 @web_ui.route("/list/<name>")
 def list(name: str):
     return render_template(
-        "list.htm", tasks=tasks(name, action=False), list=name, form=forms.NewTask()
+        "list.htm",
+        tasks=tasks(name, action=False),
+        list=name,
+        form=TaskForm(),
+        renameform=ListModificationForm(),
     )
 
 
 @web_ui.post("/tasks/<list>")
 def tasks(list: str, *, action=True):
     if action:
-        form = forms.NewTask()
+        form = TaskForm()
         if form.validate_on_submit():
             Task.create(
                 form.desc.data,
@@ -60,9 +71,12 @@ def tasks(list: str, *, action=True):
             list=list,
             tasks=session.query(Task).filter_by(list=list).all(),
             fact=random_fact(),
+            form=TaskModificationForm(),
         )
 
 
+# this post request can't get its own FlaskForm :
+# it contains a variable amount of ticket IDs
 @web_ui.post("/update/<list>")
 def updatetasks(list: str):
     donetasks = [int(taskid) for taskid in request.form]
@@ -79,14 +93,16 @@ def updatetasks(list: str):
 @web_ui.route("/newlist", methods=["POST", "GET"])
 def newlist():
     if request.method == "GET":
-        return render_template("newlist.htm")
+        return render_template("newlist.htm", form=ListForm())
     else:
-        try:
-            List.create(request.form["name"])
-        except:
-            pass
-        finally:
-            return nav(newlist=True)
+        form = ListForm()
+        if form.validate_on_submit():
+            try:
+                List.create(form.name.data)
+            except ListExistsError as e:
+                if config["DEBUG"]:
+                    traceback.print_exc()
+        return nav(newlist=True)
 
 
 @web_ui.route("/dellist/<list>")
@@ -103,25 +119,22 @@ def deltask(list: str, task: int):
 
 @web_ui.post("/modtask/<list>/<int:task>")
 def modtask(list: str, task: int):
-    Task.update(
-        list,
-        task,
-        newdesc=request.form["desc"],
-        newduefor=(
-            date.strptime(request.form["duefor"], "%Y-%m-%d")
-            if "yesdate" in request.form
-            and "duefor" in request.form
-            and request.form["duefor"]
-            else False
-        ),
-    )
+    form = TaskModificationForm()
+    if form.validate_on_submit():
+        Task.update(
+            list,
+            task,
+            newdesc=form.desc.data,
+            newduefor=(form.yesdate.data and form.duefor.data),
+        )
     return tasks(list, action=False)
 
 
 @web_ui.post("/modlist/<list>")
 def modlist(list: str):
-    print(request.form["name"])
-    List.update(list, request.form["name"])
+    form = ListModificationForm()
+    if form.validate_on_submit():
+        List.update(list, form.name.data)
     return nav()
 
 
@@ -135,6 +148,8 @@ def downloadcsv():
     )
 
 
+# this function is executed when a file is chosen,
+# no HTML form related error should be generated (no need for a custom list)
 @web_ui.post("/upload")
 def upload():
     importcsv(
