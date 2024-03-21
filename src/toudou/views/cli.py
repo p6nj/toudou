@@ -1,5 +1,5 @@
 from sys import stdin, stdout
-from models import (
+from toudou.models import (
     Base,
     engine,
     List,
@@ -11,7 +11,7 @@ from models import (
 )
 import click
 from datetime import date
-from services.csv import export as exportcsv, _import as importcsv
+from toudou.services.csv import export as exportcsv, _import as importcsv
 
 
 @click.group()

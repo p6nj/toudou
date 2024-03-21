@@ -3,16 +3,16 @@ from io import BytesIO
 from os import linesep
 import traceback
 from flask import render_template, request, send_file, Blueprint
-from models import List, ListExistsError, Session, Task
+from toudou.models import List, ListExistsError, Session, Task
 from py8fact import random_fact
-from services.csv import export as exportcsv, _import as importcsv
+from toudou.services.csv import export as exportcsv, _import as importcsv
 from .forms import (
     Task as TaskForm,
     List as ListForm,
     TaskMod as TaskModificationForm,
     ListMod as ListModificationForm,
 )
-from common import config
+from toudou.common import config
 
 web_ui = Blueprint(
     "web_ui",
