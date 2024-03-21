@@ -1,6 +1,5 @@
 from toudou.models import List, ListExistsError, Task, TaskExistsError
 from os import linesep
-from datetime import date
 
 
 # cute little function
@@ -19,7 +18,7 @@ def export():
                             int(task.done),
                             str(task.duefor) if task.duefor else "",
                         ]
-                        for task in session.query(Task).filter_by(list=list).all()
+                        for task in Task.all()
                     ]
                 ]
             ),
@@ -29,23 +28,26 @@ def export():
 
 def _import(csv: str):
     """Import from CSV headless data."""
+    from datetime import date as d
+
     lists = []
     for line in csv.splitlines():
         line = line.split(",")
-        list = line[0]
+        list = List(line[0])
         task = int(line[1])
         desc = line[2]
         done = bool(int(line[3]))
-        date = date.strptime(line[4], "%Y-%m-%d") if line[4] else None
+        date = d.strptime(line[4], "%Y-%m-%d") if line[4] else None
         if list not in lists:
             try:
-                List.create(list)
+                list.create()
             except ListExistsError as e:
                 print("list already exists: " + str(e))
             lists.append(list)
+        task = Task(desc, list, date, id=task, done=done)
         try:
-            Task.create(desc, list, date, id=task, done=done)
+            task.create()
         except TaskExistsError as e:
             print("task already exists, replacing: " + str(e))
-            Task.delete(list, task)
-            Task.create(desc, list, date, id=task, done=done)
+            task.delete()
+            task.create()

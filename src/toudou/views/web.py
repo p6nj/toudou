@@ -12,7 +12,7 @@ from .forms import (
     TaskMod as TaskModificationForm,
     ListMod as ListModificationForm,
 )
-from toudou.common import config
+from toudou import config
 
 web_ui = Blueprint(
     "web_ui",

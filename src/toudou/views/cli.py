@@ -1,13 +1,12 @@
 from sys import stdin, stdout
 from toudou.models import (
-    Base,
     engine,
     List,
     ListNotFoundError,
     Task,
     ListExistsError,
     TaskNotFoundError,
-    Session,
+    init as init_db,
 )
 import click
 from datetime import date
@@ -22,22 +21,21 @@ def cli():
 
 @cli.command()
 def init():
-    Base.metadata.create_all(engine)
+    init_db()
     try:
-        List.create("default")
+        List("default").create()
     except ListExistsError:
         print("nothing to do.")
 
 
 @cli.command()
 def lists():
-    with Session() as session:
-        if lists := session.query(List).all():
-            print("Available lists :")
-            for list in lists:
-                print("- " + list.name)
-        else:
-            print('No list available. To create one, use "new list [name]".')
+    if lists := List.all():
+        print("Available lists :")
+        for list in lists:
+            print("- " + list.name)
+    else:
+        print('No list available. To create one, use "new list [name]".')
 
 
 @cli.group(short_help="make lists or tasks")
@@ -54,8 +52,8 @@ def new():
 def newlist(name: str):
     """Creates a new list (file) in the current directory."""
     try:
-        List.create(name)
-    except ListExistsError as e:
+        List(name).create()
+    except ListExistsError:
         print(f'"{name}" list already exists.')
 
 
@@ -77,7 +75,10 @@ def newlist(name: str):
 @click.option("-d", "--duefor", help="The date the task is due for.")
 def newtask(task: str, list: str, duefor: date = None):
     """Creates a task and add it to the given list ("default" by default)."""
-    Task.create(task, list, duefor)
+    try:
+        Task(desc=task, list=List.read(list), duefor=duefor).create()
+    except ListNotFoundError:
+        print("List not found.")
 
 
 @cli.group("del", short_help="delete lists or tasks")
@@ -97,7 +98,7 @@ def delete():
 def deltask(task: int, list: str):
     """Deletes a task from the given list ("default" by default)."""
     try:
-        Task.delete(list, task)
+        Task.read(list, task).delete()
     except TaskNotFoundError:
         print("Task does not exist.")
 
@@ -114,7 +115,7 @@ def dellist(name: str):
     Cannot be undone.
     """
     try:
-        List.delete(name)
+        List.read(name).delete()
     except ListNotFoundError:
         print(f'"{name}" list does not exist.')
 
@@ -146,7 +147,7 @@ def rename():
 @click.argument("new")
 def updatelist(old: str, new: str):
     try:
-        List.update(old, new)
+        List(old).update(new)
     except ListNotFoundError:
         print(f'"{old}" list does not exist.')
 
@@ -162,7 +163,7 @@ def updatelist(old: str, new: str):
 )
 def updatetaskdesc(id: int, desc: str, list: str):
     try:
-        Task.update(list, id, desc)
+        Task.read(id, list).update(desc=desc)
     except TaskNotFoundError:
         print(f'"{list}" list does not exist.')
 
@@ -177,7 +178,7 @@ def updatetaskdesc(id: int, desc: str, list: str):
 )
 def markdone(id: int, list: str):
     try:
-        Task.update(list, id, newdone=True)
+        Task.read(id, list).update(newdone=True)
     except TaskNotFoundError:
         print("Task does not exist.")
 
@@ -192,7 +193,7 @@ def markdone(id: int, list: str):
 )
 def markundone(id: int, list: str):
     try:
-        Task.update(list, id, newdone=False)
+        Task.read(id, list).update(newdone=False)
     except TaskNotFoundError:
         print("Task does not exist.")
 

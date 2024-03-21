@@ -2,10 +2,12 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from os import linesep
 from typing import Self
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from datetime import date
 from py8fact import random_fact
-from toudou.common import config
+from toudou import config
+
+list_ = list
 
 engine = create_engine(config["DATABASE_URL"], echo=config["DEBUG"])
 
@@ -22,6 +24,12 @@ def Session(*, commit=False):
         raise
     finally:
         session.close()
+
+
+def init():
+    with Session(commit=1) as session:
+        with open("td.sql", "r") as file:
+            session.execute(text(file.read()))
 
 
 def strike(text):
@@ -56,7 +64,7 @@ class Task:
 class List:
     __tablename__ = "list"
     name: str
-    items: list[Task]
+    items: list[Task] = []
 
     def __repr__(self) -> str:
         return f"<List(name='{self.name}')>"
@@ -70,12 +78,12 @@ class List:
         )
 
     @staticmethod
-    def all():
+    def all() -> list[Self]:
         with Session() as session:
             return session.execute(f"select * from {List.__tablename__}").fetchall()
 
     @staticmethod
-    def exists(name: str):
+    def exists(name: str) -> Self | None:
         with Session() as session:
             return session.execute(
                 f"select * from {List.__tablename__} where name={name}"
@@ -118,7 +126,7 @@ class Task:
     list: List
 
     def __repr__(self) -> str:
-        return f"<Task(id={self.id}, desc='{self.desc}', done={self.done}, duefor='{self.duefor}', list='{self.list}')>"
+        return f"<Task(id={self.id}, desc='{self.desc}', done={self.done}, duefor='{self.duefor}', list='{self.list.name}')>"
 
     def __str__(self) -> str:
         return (strike(self.desc) if self.done else self.desc) + (
@@ -128,7 +136,7 @@ class Task:
         )
 
     @staticmethod
-    def all(list: str = None):
+    def all(list: str = None) -> list_[Self]:
         with Session() as session:
             return session.execute(
                 f"select * from {Task.__tablename__}"
@@ -136,25 +144,25 @@ class Task:
             ).fetchall()
 
     @staticmethod
-    def exists(id: int, list: str):
+    def exists(id: int, list: str) -> Self:
         with Session() as session:
             return session.execute(
                 f"select * from {Task.__tablename__} where id={id} and list={list}"
             ).fetchone()
 
     def create(self):
-        if self.id and not Task.exists(self.id, self.list):
+        if self.id and not Task.exists(self.id, self.list.name):
             with Session(commit=True) as session:
                 session.execute(
                     f"insert into {Task.__tablename__}(id, desc, done, duefor, list)"
-                    "values ({self.id}, {self.desc}, {self.done}, {self.duefor}, {self.list})"
+                    f"values ({self.id}, {self.desc}, {self.done}, {self.duefor}, {self.list.name})"
                 )
         else:
             raise TaskExistsError(self.id)
 
     @staticmethod
-    def read(id: int, list: str) -> Self:
-        if list := Task.exists(id, list):
+    def read(id: int, list: List) -> Self:
+        if list := Task.exists(id, list.name):
             return list
         else:
             raise ListNotFoundError(id)
@@ -168,19 +176,19 @@ class Task:
         with Session(commit=True) as session:
             if desc:
                 session.execute(
-                    f"update {Task.__tablename__} set desc={desc} where id={self.id} and list={self.list}"
+                    f"update {Task.__tablename__} set desc={desc} where id={self.id} and list={self.list.name}"
                 )
             if done is not None:
                 session.execute(
-                    f"update {Task.__tablename__} set done={done} where id={self.id} and list={self.list}"
+                    f"update {Task.__tablename__} set done={done} where id={self.id} and list={self.list.name}"
                 )
             if duefor is not None:
                 session.execute(
-                    f"update {Task.__tablename__} set duefor={duefor} where id={self.id} and list={self.list}"
+                    f"update {Task.__tablename__} set duefor={duefor} where id={self.id} and list={self.list.name}"
                 )
 
     def delete(self):
         with Session(commit=True) as session:
             session.execute(
-                f"delete from {Task.__tablename__} where id={self.id} and list={self.list}"
+                f"delete from {Task.__tablename__} where id={self.id} and list={self.list.name}"
             )
