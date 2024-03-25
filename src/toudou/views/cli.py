@@ -22,7 +22,7 @@ def cli():
 def init():
     init_db()
     try:
-        List("default").create()
+        List("default", []).create()
     except ListExistsError:
         print("nothing to do.")
 
@@ -51,7 +51,7 @@ def new():
 def newlist(name: str):
     """Creates a new list (file) in the current directory."""
     try:
-        List(name).create()
+        List(name, []).create()
     except ListExistsError:
         print(f'"{name}" list already exists.')
 
@@ -146,7 +146,7 @@ def rename():
 @click.argument("new")
 def updatelist(old: str, new: str):
     try:
-        List(old).update(new)
+        List(old, []).update(new)
     except ListNotFoundError:
         print(f'"{old}" list does not exist.')
 

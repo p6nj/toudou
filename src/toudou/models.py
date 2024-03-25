@@ -29,7 +29,8 @@ def Session(*, commit=False):
 def init():
     with Session(commit=1) as session:
         with open("td.sql", "r") as file:
-            session.execute(text(file.read()))
+            for line in file.readlines():
+                session.execute(text(line))
 
 
 def strike(text):
@@ -64,7 +65,7 @@ class Task:
 class List:
     __tablename__ = "list"
     name: str
-    items: list[Task] = []
+    items: list[Task]
 
     def __repr__(self) -> str:
         return f"<List(name='{self.name}')>"
@@ -80,13 +81,17 @@ class List:
     @staticmethod
     def all() -> list[Self]:
         with Session() as session:
-            return session.execute(f"select * from {List.__tablename__}").fetchall()
+            return session.execute(
+                text(f"select * from {List.__tablename__}")
+            ).fetchall()
 
     @staticmethod
     def exists(name: str) -> Self | None:
         with Session() as session:
             return session.execute(
-                f"select * from {List.__tablename__} where name={name}"
+                text(f"select * from {List.__tablename__} where name=:name").params(
+                    name=name
+                )
             ).fetchone()
 
     def create(self):
@@ -121,9 +126,9 @@ class Task:
     __tablename__ = "task"
     id: int
     desc: str
-    done: bool = False
     duefor: date
     list: List
+    done: bool = False
 
     def __repr__(self) -> str:
         return f"<Task(id={self.id}, desc='{self.desc}', done={self.done}, duefor='{self.duefor}', list='{self.list.name}')>"
