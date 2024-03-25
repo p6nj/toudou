@@ -1,4 +1,3 @@
-from datetime import date
 from io import BytesIO
 from os import linesep
 import traceback
@@ -12,7 +11,7 @@ from .forms import (
     TaskMod as TaskModificationForm,
     ListMod as ListModificationForm,
 )
-from toudou import config
+from toudou.config import config
 
 web_ui = Blueprint(
     "web_ui",
@@ -21,6 +20,30 @@ web_ui = Blueprint(
     static_url_path="static",
     template_folder="templates",
 )
+
+
+def create_app():
+    from os import path
+    from flask import Flask, render_template, send_from_directory
+
+    app = Flask(__name__)
+
+    app.config.from_prefixed_env()
+    app.register_blueprint(web_ui)
+
+    @app.route("/favicon.ico")
+    def favicon():
+        return send_from_directory(
+            path.join(app.root_path, "static"),
+            "favicon.ico",
+            mimetype="image/vnd.microsoft.icon",
+        )
+
+    @app.errorhandler(500)
+    def handle_internal_error(error):
+        return render_template("error.htm")
+
+    return app
 
 
 @web_ui.route("/")

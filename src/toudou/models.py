@@ -5,7 +5,7 @@ from typing import Self
 from sqlalchemy import create_engine, text
 from datetime import date
 from py8fact import random_fact
-from toudou import config
+from toudou.config import config
 
 list_ = list
 

@@ -1,6 +1,5 @@
 from sys import stdin, stdout
 from toudou.models import (
-    engine,
     List,
     ListNotFoundError,
     Task,
