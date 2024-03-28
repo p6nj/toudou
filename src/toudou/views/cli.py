@@ -22,7 +22,7 @@ def cli():
 def init():
     init_db()
     try:
-        List("default", []).create()
+        List.empty("default").create()
     except ListExistsError:
         print("nothing to do.")
 
@@ -51,7 +51,7 @@ def new():
 def newlist(name: str):
     """Creates a new list (file) in the current directory."""
     try:
-        List(name, []).create()
+        List.empty(name).create()
     except ListExistsError:
         print(f'"{name}" list already exists.')
 
@@ -75,7 +75,7 @@ def newlist(name: str):
 def newtask(task: str, list: str, duefor: date = None):
     """Creates a task and add it to the given list ("default" by default)."""
     try:
-        Task(desc=task, list=List.read(list), duefor=duefor).create()
+        Task(desc=task, list=list, duefor=duefor).create()
     except ListNotFoundError:
         print("List not found.")
 
@@ -131,6 +131,7 @@ def show(list: str):
     If no list name is given, show "default" tasks.
     """
     try:
+        print(repr(List.read(list)))
         print(List.read(list))
     except ListNotFoundError:
         print(f'"{list}" list does not exist.')
@@ -146,7 +147,7 @@ def rename():
 @click.argument("new")
 def updatelist(old: str, new: str):
     try:
-        List(old, []).update(new)
+        List.empty(old).update(new)
     except ListNotFoundError:
         print(f'"{old}" list does not exist.')
 

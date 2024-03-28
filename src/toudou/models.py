@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from os import linesep
 from typing import Self
-from sqlalchemy import create_engine, text
+from sqlalchemy import Row, create_engine, text
 from datetime import date
 from py8fact import random_fact
 from toudou.config import config
@@ -56,82 +56,17 @@ class TaskNotFoundError(Exception):
     pass
 
 
-# fake class for type checking purposes
-class Task:
-    pass
-
-
-@dataclass
-class List:
-    __tablename__ = "list"
-    name: str
-    items: list[Task]
-
-    def __repr__(self) -> str:
-        return f"<List(name='{self.name}')>"
-
-    def __str__(self) -> str:
-        items = List.all()
-        return (
-            linesep.join([f"{t.id}\t{t}" for t in items])
-            if items
-            else "Nothing to do." + linesep + "Did you know? " + random_fact()
-        )
-
-    @staticmethod
-    def all() -> list[Self]:
-        with Session() as session:
-            return session.execute(
-                text(f"select * from {List.__tablename__}")
-            ).fetchall()
-
-    @staticmethod
-    def exists(name: str) -> Self | None:
-        with Session() as session:
-            return session.execute(
-                text(f"select * from {List.__tablename__} where name=:name").params(
-                    name=name
-                )
-            ).fetchone()
-
-    def create(self):
-        if not List.exists(self.name):
-            with Session(commit=True) as session:
-                session.execute(
-                    f"insert into {List.__tablename__} values ({self.name})"
-                )
-        else:
-            raise ListExistsError(self.name)
-
-    @staticmethod
-    def read(name: str) -> Self:
-        if list := List.exists(name):
-            return list
-        else:
-            raise ListNotFoundError(name)
-
-    def update(self, name: str):
-        with Session(commit=True) as session:
-            session.execute(
-                f"update {List.__tablename__} set name={name} where name={self.name}"
-            )
-
-    def delete(self):
-        with Session(commit=True) as session:
-            session.execute(f"delete from {List.__tablename__} where name={self.name}")
-
-
 @dataclass
 class Task:
     __tablename__ = "task"
-    id: int
     desc: str
     duefor: date
-    list: List
+    list: str
+    id: int = None
     done: bool = False
 
     def __repr__(self) -> str:
-        return f"<Task(id={self.id}, desc='{self.desc}', done={self.done}, duefor='{self.duefor}', list='{self.list.name}')>"
+        return f"<Task(id={self.id}, desc='{self.desc}', done={self.done}, duefor='{self.duefor}', list='{self.list}')>"
 
     def __str__(self) -> str:
         return (strike(self.desc) if self.done else self.desc) + (
@@ -144,29 +79,51 @@ class Task:
     def all(list: str = None) -> list_[Self]:
         with Session() as session:
             return session.execute(
-                f"select * from {Task.__tablename__}"
-                + " where list={list}" * bool(list)
+                text(
+                    f"select * from {Task.__tablename__}"
+                    + " where list={list}" * bool(list)
+                )
             ).fetchall()
 
     @staticmethod
     def exists(id: int, list: str) -> Self:
         with Session() as session:
             return session.execute(
-                f"select * from {Task.__tablename__} where id={id} and list={list}"
+                text(
+                    f"select * from {Task.__tablename__} where id=:id and list=:list"
+                ).params(id=id, list=list)
             ).fetchone()
 
+    @staticmethod
+    def from_row(row: Row[int, str, bool, date | None, str]) -> Self:
+        return Task(
+            row.desc,
+            row.duefor,
+            row.list,
+            id=row.id,
+            done=row.done,
+        )
+
     def create(self):
-        if self.id and not Task.exists(self.id, self.list.name):
+        if not self.id or not Task.exists(self.id, self.list):
             with Session(commit=True) as session:
                 session.execute(
-                    f"insert into {Task.__tablename__}(id, desc, done, duefor, list)"
-                    f"values ({self.id}, {self.desc}, {self.done}, {self.duefor}, {self.list.name})"
+                    text(
+                        f"insert into {Task.__tablename__}(id, desc, done, duefor, list)"
+                        "values (:id, :desc, :done, :duefor, :list)"
+                    ).params(
+                        id=self.id,
+                        desc=self.desc,
+                        done=self.done,
+                        duefor=self.duefor,
+                        list=self.list,
+                    )
                 )
         else:
             raise TaskExistsError(self.id)
 
     @staticmethod
-    def read(id: int, list: List) -> Self:
+    def read(id: int, list: str) -> Self:
         if list := Task.exists(id, list.name):
             return list
         else:
@@ -181,19 +138,114 @@ class Task:
         with Session(commit=True) as session:
             if desc:
                 session.execute(
-                    f"update {Task.__tablename__} set desc={desc} where id={self.id} and list={self.list.name}"
+                    text(
+                        f"update {Task.__tablename__} set desc=:desc where id=:id and list=:list"
+                    ).params(desc=desc, id=self.id, list=self.list)
                 )
             if done is not None:
                 session.execute(
-                    f"update {Task.__tablename__} set done={done} where id={self.id} and list={self.list.name}"
+                    text(
+                        f"update {Task.__tablename__} set done=:done where id=:id and list=:list"
+                    ).params(done=done, id=self.id, list=self.list)
                 )
             if duefor is not None:
                 session.execute(
-                    f"update {Task.__tablename__} set duefor={duefor} where id={self.id} and list={self.list.name}"
+                    text(
+                        f"update {Task.__tablename__} set duefor=:duefor where id=:id and list=:list"
+                    ).params(duefor=duefor, id=self.id, list=self.list)
                 )
 
     def delete(self):
         with Session(commit=True) as session:
             session.execute(
-                f"delete from {Task.__tablename__} where id={self.id} and list={self.list.name}"
+                text(
+                    f"delete from {Task.__tablename__} where id=:id and list=:list"
+                ).params(id=self.id, list=self.list)
+            )
+
+
+@dataclass
+class List:
+    __tablename__ = "list"
+    name: str
+    items: list[Task]
+
+    def __repr__(self) -> str:
+        return f"<List(name='{self.name}')>"
+
+    def __str__(self) -> str:
+        return (
+            linesep.join([f"{t.id}\t{t}" for t in self.items])
+            if self.items
+            else "Nothing to do." + linesep + "Did you know? " + random_fact()
+        )
+
+    @staticmethod
+    def all() -> list[Self]:
+        with Session() as session:
+            return session.execute(
+                text(f"select * from {List.__tablename__}")
+            ).fetchall()
+
+    @staticmethod
+    def from_row(row: Row[str]) -> Self:
+        return List.empty(row.name).with_items()
+
+    @staticmethod
+    def exists(name: str) -> Row[str] | None:
+        with Session() as session:
+            return session.execute(
+                text(f"select * from {List.__tablename__} where name=:name").params(
+                    name=name
+                )
+            ).fetchone()
+
+    def create(self):
+        if not List.exists(self.name):
+            with Session(commit=True) as session:
+                session.execute(
+                    text(f"insert into {List.__tablename__} values (:name)").params(
+                        name=self.name
+                    )
+                )
+        else:
+            raise ListExistsError(self.name)
+
+    @staticmethod
+    def read(name: str) -> Self:
+        if row := List.exists(name):
+            return List.from_row(row)
+        else:
+            raise ListNotFoundError(name)
+
+    def with_items(self) -> Self:
+        with Session() as session:
+            self.items = [
+                Task.from_row(r)
+                for r in session.execute(
+                    text(f"select * from {Task.__tablename__} where list=:list").params(
+                        list=self.name
+                    )
+                ).fetchall()
+            ]
+        return self
+
+    @staticmethod
+    def empty(name: str) -> Self:
+        return List(name, [])
+
+    def update(self, name: str):
+        with Session(commit=True) as session:
+            session.execute(
+                text(
+                    f"update {List.__tablename__} set name=:name where name=:selfname"
+                ).params(name=name, selfname=self.name)
+            )
+
+    def delete(self):
+        with Session(commit=True) as session:
+            session.execute(
+                text(f"delete from {List.__tablename__} where name=:name").params(
+                    name=self.name
+                )
             )

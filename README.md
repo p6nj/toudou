@@ -19,7 +19,7 @@ Course & examples : [https://kathode.neocities.org](https://kathode.neocities.or
 
 Todo :
 - [x] remove SQLAlchemy ORM
-- [ ] use SQL preparation
-- [ ] remove db from other modules
+- [x] use SQL preparation
+- [x] remove db from other modules
 - [x] restructure project for deployment
 - [ ] restructure flask template imports
