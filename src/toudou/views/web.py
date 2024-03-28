@@ -2,7 +2,7 @@ from io import BytesIO
 from os import linesep
 import traceback
 from flask import render_template, request, send_file, Blueprint
-from toudou.models import List, ListExistsError, Session, Task
+from toudou.models import List, ListExistsError, Task
 from py8fact import random_fact
 from toudou.services.csv import export as exportcsv, _import as importcsv
 from .forms import (
@@ -17,8 +17,8 @@ web_ui = Blueprint(
     "web_ui",
     __name__,
     url_prefix="/",
-    static_url_path="static",
-    template_folder="templates",
+    static_url_path="../static",
+    template_folder="../templates",
 )
 
 
@@ -26,7 +26,7 @@ def create_app():
     from os import path
     from flask import Flask, render_template, send_from_directory
 
-    app = Flask(__name__)
+    app = Flask(__name__, static_folder="../static", template_folder="../templates")
 
     app.config.from_prefixed_env()
     app.register_blueprint(web_ui)
@@ -34,7 +34,7 @@ def create_app():
     @app.route("/favicon.ico")
     def favicon():
         return send_from_directory(
-            path.join(app.root_path, "static"),
+            path.join(app.root_path, "../static"),
             "favicon.ico",
             mimetype="image/vnd.microsoft.icon",
         )
@@ -53,12 +53,11 @@ def index():
 
 @web_ui.route("/nav")
 def nav(*, newlist=False):
-    with Session() as session:
-        return render_template(
-            "nav.htm",
-            lists=[list.name for list in session.query(List).all()],
-            newlist=newlist,
-        )
+    return render_template(
+        "nav.htm",
+        lists=[list.name for list in List.all()],
+        newlist=newlist,
+    )
 
 
 # main fillers
@@ -83,19 +82,14 @@ def tasks(list: str, *, action=True):
     if action:
         form = TaskForm()
         if form.validate_on_submit():
-            Task.create(
-                form.desc.data,
-                list,
-                form.duefor.data,
-            )
-    with Session() as session:
-        return render_template(
-            "tasks.htm",
-            list=list,
-            tasks=session.query(Task).filter_by(list=list).all(),
-            fact=random_fact(),
-            form=TaskModificationForm(),
-        )
+            Task(form.desc.data, form.duefor.data, list).create()
+    return render_template(
+        "tasks.htm",
+        list=list,
+        tasks=Task.all(list=list),
+        fact=random_fact(),
+        form=TaskModificationForm(),
+    )
 
 
 # this post request can't get its own FlaskForm :
@@ -104,12 +98,11 @@ def tasks(list: str, *, action=True):
 def updatetasks(list: str):
     donetasks = [int(taskid) for taskid in request.form]
     print(donetasks)
-    with Session() as session:
-        for task in session.query(Task).filter_by(list=list).all():
-            if task.done and task.id not in donetasks:
-                Task.update(list, task.id, newdone=False)
-            if not task.done and task.id in donetasks:
-                Task.update(list, task.id, newdone=True)
+    for task in Task.all(list=list):
+        if task.done and task.id not in donetasks:
+            Task.read(task.id, list).update(done=False)
+        if not task.done and task.id in donetasks:
+            Task.read(task.id, list).update(done=True)
     return tasks(list, action=False)
 
 
@@ -121,7 +114,7 @@ def newlist():
         form = ListForm()
         if form.validate_on_submit():
             try:
-                List.create(form.name.data)
+                List.empty(form.name.data).create()
             except ListExistsError as e:
                 if config["DEBUG"]:
                     traceback.print_exc()
@@ -130,7 +123,7 @@ def newlist():
 
 @web_ui.route("/dellist/<list>")
 def dellist(list: str):
-    List.delete(list)
+    List.read(list).delete()
     return nav()
 
 
@@ -144,9 +137,7 @@ def deltask(list: str, task: int):
 def modtask(list: str, task: int):
     form = TaskModificationForm()
     if form.validate_on_submit():
-        Task.update(
-            list,
-            task,
+        Task.read(task, list).update(
             newdesc=form.desc.data,
             newduefor=(form.yesdate.data and form.duefor.data),
         )
@@ -157,7 +148,9 @@ def modtask(list: str, task: int):
 def modlist(list: str):
     form = ListModificationForm()
     if form.validate_on_submit():
-        List.update(list, form.name.data)
+        List.read(
+            list,
+        ).update(form.name.data)
     return nav()
 
 

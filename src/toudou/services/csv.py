@@ -33,7 +33,7 @@ def _import(csv: str):
     lists = []
     for line in csv.splitlines():
         line = line.split(",")
-        list = List(line[0])
+        list = List.empty(line[0])
         task = int(line[1])
         desc = line[2]
         done = bool(int(line[3]))
@@ -44,7 +44,7 @@ def _import(csv: str):
             except ListExistsError as e:
                 print("list already exists: " + str(e))
             lists.append(list)
-        task = Task(desc, list, date, id=task, done=done)
+        task = Task(desc, date, list.name, id=task, done=done)
         try:
             task.create()
         except TaskExistsError as e:

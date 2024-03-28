@@ -81,7 +81,7 @@ class Task:
             return session.execute(
                 text(
                     f"select * from {Task.__tablename__}"
-                    + " where list={list}" * bool(list)
+                    + f" where list='{list}'" * bool(list)
                 )
             ).fetchall()
 
@@ -105,7 +105,7 @@ class Task:
         )
 
     def create(self):
-        if not self.id or not Task.exists(self.id, self.list):
+        if (not self.id) or (not Task.exists(self.id, self.list)):
             with Session(commit=True) as session:
                 session.execute(
                     text(
@@ -124,8 +124,8 @@ class Task:
 
     @staticmethod
     def read(id: int, list: str) -> Self:
-        if list := Task.exists(id, list.name):
-            return list
+        if row := Task.exists(id, list):
+            return Task.from_row(row)
         else:
             raise ListNotFoundError(id)
 
