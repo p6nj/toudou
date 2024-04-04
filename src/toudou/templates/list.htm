@@ -2,6 +2,7 @@
     <h2>{{ list }} List</h2>
     {# this section will be updated by the form below #}
     {{ tasks|safe }}
+    {% if admin %}
     <h2>New Task</h2>
     <p>
         Got something to do? Just fill the form below and submit.
@@ -40,4 +41,5 @@
                 list</a>
         </p>
     </section>
+    {% endif %}
 </main>

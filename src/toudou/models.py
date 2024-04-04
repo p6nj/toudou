@@ -1,7 +1,7 @@
+from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass
 from os import linesep
-from typing import Self
 from sqlalchemy import Row, create_engine, text
 from datetime import date
 from py8fact import random_fact
@@ -76,7 +76,7 @@ class Task:
         )
 
     @staticmethod
-    def all(list: str = None) -> list_[Self]:
+    def all(list: str = None) -> list_[Task]:  # type: ignore
         with Session() as session:
             return session.execute(
                 text(
@@ -86,7 +86,7 @@ class Task:
             ).fetchall()
 
     @staticmethod
-    def exists(id: int, list: str) -> Self:
+    def exists(id: int, list: str) -> Task:
         with Session() as session:
             return session.execute(
                 text(
@@ -95,7 +95,7 @@ class Task:
             ).fetchone()
 
     @staticmethod
-    def from_row(row: Row[int, str, bool, date | None, str]) -> Self:
+    def from_row(row: Row[int, str, bool, date | None, str]) -> Task:
         return Task(
             row.desc,
             row.duefor,
@@ -123,7 +123,7 @@ class Task:
             raise TaskExistsError(self.id)
 
     @staticmethod
-    def read(id: int, list: str) -> Self:
+    def read(id: int, list: str) -> Task:
         if row := Task.exists(id, list):
             return Task.from_row(row)
         else:
@@ -181,14 +181,14 @@ class List:
         )
 
     @staticmethod
-    def all() -> list[Self]:
+    def all() -> list[List]:
         with Session() as session:
             return session.execute(
                 text(f"select * from {List.__tablename__}")
             ).fetchall()
 
     @staticmethod
-    def from_row(row: Row[str]) -> Self:
+    def from_row(row: Row[str]) -> List:
         return List.empty(row.name).with_items()
 
     @staticmethod
@@ -212,13 +212,13 @@ class List:
             raise ListExistsError(self.name)
 
     @staticmethod
-    def read(name: str) -> Self:
+    def read(name: str) -> List:
         if row := List.exists(name):
             return List.from_row(row)
         else:
             raise ListNotFoundError(name)
 
-    def with_items(self) -> Self:
+    def with_items(self) -> List:
         with Session() as session:
             self.items = [
                 Task.from_row(r)
@@ -231,7 +231,7 @@ class List:
         return self
 
     @staticmethod
-    def empty(name: str) -> Self:
+    def empty(name: str) -> List:
         return List(name, [])
 
     def update(self, name: str):

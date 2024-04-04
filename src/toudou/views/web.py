@@ -12,6 +12,8 @@ from .forms import (
     ListMod as ListModificationForm,
 )
 from toudou.config import config
+from flask_httpauth import HTTPBasicAuth
+from werkzeug.security import generate_password_hash, check_password_hash
 
 web_ui = Blueprint(
     "web_ui",
@@ -46,7 +48,35 @@ def create_app():
     return app
 
 
+auth = HTTPBasicAuth()
+
+users = {config["USER_NAME"]: generate_password_hash(config["USER_PWD"])}
+
+admins = {config["ADMIN_NAME"]: generate_password_hash(config["ADMIN_PWD"])}
+
+
+@auth.verify_password
+def verify_password(username, password):
+    if (username in users and check_password_hash(users.get(username), password)) or (
+        username in admins and check_password_hash(admins.get(username), password)
+    ):
+        return username
+    else:
+        print(repr(password))
+        # print(check_password_hash(admins.get(username), password))
+
+
+@auth.get_user_roles
+def get_user_roles(user):
+    return (
+        "user"
+        if users.get(user) is not None
+        else "admin" if admins.get(user) is not None else "other"
+    )
+
+
 @web_ui.route("/")
+@auth.login_required(role=["admin", "user"])
 def index():
     return render_template("index.html", nav=nav(), main=home())
 
@@ -62,11 +92,15 @@ def nav(*, newlist=False):
 
 # main fillers
 @web_ui.route("/home")
+@auth.login_required(role=["admin", "user"])
 def home():
-    return render_template("home.htm")
+    return render_template(
+        "home.htm", admin=get_user_roles(auth.current_user()) == "admin"
+    )
 
 
 @web_ui.route("/list/<name>")
+@auth.login_required(role=["admin", "user"])
 def list(name: str):
     return render_template(
         "list.htm",
@@ -74,6 +108,7 @@ def list(name: str):
         list=name,
         form=TaskForm(),
         renameform=ListModificationForm(),
+        admin=get_user_roles(auth.current_user()) == "admin",
     )
 
 
