@@ -129,7 +129,7 @@ def dellist(list: str):
 
 @web_ui.route("/deltask/<list>/<int:task>")
 def deltask(list: str, task: int):
-    Task.delete(list, task)
+    Task.read(task, list).delete()
     return tasks(list, action=False)
 
 
@@ -138,8 +138,8 @@ def modtask(list: str, task: int):
     form = TaskModificationForm()
     if form.validate_on_submit():
         Task.read(task, list).update(
-            newdesc=form.desc.data,
-            newduefor=(form.yesdate.data and form.duefor.data),
+            desc=form.desc.data,
+            duefor=(form.yesdate.data and form.duefor.data),
         )
     return tasks(list, action=False)
 
