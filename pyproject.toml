@@ -24,4 +24,4 @@ build-backend = "pdm.pep517.api"
 
 [tool.pdm.scripts]
 '_'.env_file = "dev.env"
-start = "flask --app toudou.views --debug run"
+start = "flask --app toudou --debug run"
