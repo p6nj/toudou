@@ -82,11 +82,13 @@ def index():
 
 
 @web_ui.route("/nav")
+@auth.login_required(role=["admin", "user"])
 def nav(*, newlist=False):
     return render_template(
         "nav.htm",
         lists=[list.name for list in List.all()],
         newlist=newlist,
+        admin=get_user_roles(auth.current_user()) == "admin",
     )
 
 
@@ -113,6 +115,7 @@ def list(name: str):
 
 
 @web_ui.post("/tasks/<list>")
+@auth.login_required(role=["admin", "user"])
 def tasks(list: str, *, action=True):
     if action:
         form = TaskForm()
@@ -124,12 +127,14 @@ def tasks(list: str, *, action=True):
         tasks=Task.all(list=list),
         fact=random_fact(),
         form=TaskModificationForm(),
+        admin=get_user_roles(auth.current_user()) == "admin",
     )
 
 
 # this post request can't get its own FlaskForm :
 # it contains a variable amount of ticket IDs
 @web_ui.post("/update/<list>")
+@auth.login_required(role="admin")
 def updatetasks(list: str):
     donetasks = [int(taskid) for taskid in request.form]
     print(donetasks)
@@ -142,6 +147,7 @@ def updatetasks(list: str):
 
 
 @web_ui.route("/newlist", methods=["POST", "GET"])
+@auth.login_required(role="admin")
 def newlist():
     if request.method == "GET":
         return render_template("newlist.htm", form=ListForm())
@@ -157,18 +163,21 @@ def newlist():
 
 
 @web_ui.route("/dellist/<list>")
+@auth.login_required(role="admin")
 def dellist(list: str):
     List.read(list).delete()
     return nav()
 
 
 @web_ui.route("/deltask/<list>/<int:task>")
+@auth.login_required(role="admin")
 def deltask(list: str, task: int):
     Task.read(task, list).delete()
     return tasks(list, action=False)
 
 
 @web_ui.post("/modtask/<list>/<int:task>")
+@auth.login_required(role="admin")
 def modtask(list: str, task: int):
     form = TaskModificationForm()
     if form.validate_on_submit():
@@ -180,6 +189,7 @@ def modtask(list: str, task: int):
 
 
 @web_ui.post("/modlist/<list>")
+@auth.login_required(role="admin")
 def modlist(list: str):
     form = ListModificationForm()
     if form.validate_on_submit():
@@ -190,6 +200,7 @@ def modlist(list: str):
 
 
 @web_ui.route("/download")
+@auth.login_required(role=["admin", "user"])
 def downloadcsv():
     buffer = BytesIO()
     buffer.write(exportcsv().encode("utf-8"))
@@ -202,6 +213,7 @@ def downloadcsv():
 # this function is executed when a file is chosen,
 # no HTML form related error should be generated (no need for a custom list)
 @web_ui.post("/upload")
+@auth.login_required(role="admin")
 def upload():
     importcsv(
         linesep.join(request.files["file"].read().decode("utf-8").splitlines()[1:])

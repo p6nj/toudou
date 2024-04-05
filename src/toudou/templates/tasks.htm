@@ -8,16 +8,22 @@
         <p>{{ fact }}</p>
     </details>
     {% else %}
+    {% if admin %}
     <form id="update" action="/update/{{ list }}#tasks" method="post"></form>
+    {% endif %}
     {% for task in tasks %}
     <p>
         <label id="{{ task.id }}">
+            {% if admin %}
             <input type="checkbox" name="{{ task.id }}" onchange="document.forms['update'].submit()" {% if task.done
                 %}checked{% endif %} form="update">
+            {% endif %}
             {{ task.desc }}{% if task.duefor %} ({{ task.duefor }}){% endif %}
+            {% if admin %}
             <a href=""
                 onclick='document.getElementById("{{ task.id }}").innerHTML=`<form action="/modtask/{{ list }}/{{ task.id }}#tasks" method="post">{{ form.csrf_token }}{{ form.desc(value=task.desc) }}include date{# idk if the checked attribute can be set using Field.__call__() here #}<input type="checkbox" name="yesdate" {% if task.duefor %}checked{% endif %}>{{ form.duefor(value=task.duefor) }}<button type="submit">Submit</button><button type="reset">Reset</button></form>`'>🖉</a>
             <a href="/deltask/{{ list }}/{{ task.id }}#tasks">X</a>
+            {% endif %}
         </label>
     </p>
     {% endfor %}

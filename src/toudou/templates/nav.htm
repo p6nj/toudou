@@ -1,5 +1,6 @@
 {# reset links and set clicked link as current link #}
 {# somehow this doesn't work after creating new lists, maybe htmz shenanigans #}
+{# the following script changes current nav #}
 <script>
     window.onload = () => Array.from(document.querySelectorAll('a:not(.nochoose)')).forEach(a => a.onclick = () => {
         Array.from(document.getElementsByClassName('current')).forEach(current => current.removeAttribute('class'));
@@ -13,18 +14,22 @@
         </svg>
         Home
     </a>
+    {% if admin %}
     <a href="/newlist#content" {% if newlist %}class="current" {% endif %}>
         <svg class="icon nofill" viewBox="-0.1 -0.1 2.2 2.2">
             <path d="M 0 1 L 2 1 M 1 0 L 1 2"></path>
         </svg>
         New list
     </a>
+    {% endif %}
     {% for list in lists %}
     <a href="/list/{{ list }}#content">{{ list }}</a>
     {% endfor %}
     <a class="nochoose" href="/download">CSV 🠋</a>
+    {% if admin %}
     <a class="nochoose" href="" onclick="document.getElementById('file').click()">CSV 🠉</a>
     <form action="/upload#content" method="post" style="display: none;" enctype="multipart/form-data" id="upload">
         <input type="file" name="file" id="file" onchange="document.forms['upload'].submit()">
     </form>
+    {% endif %}
 </nav>
