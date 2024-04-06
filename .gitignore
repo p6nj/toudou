@@ -8,3 +8,5 @@ default
 test.*
 *.db
 dist
+.pdm.toml
+td.log
