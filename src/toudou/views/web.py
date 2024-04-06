@@ -14,6 +14,13 @@ from .forms import (
 from toudou.config import config
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
+from logging import basicConfig, exception, INFO, FileHandler, StreamHandler
+
+basicConfig(
+    level=INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[FileHandler(config["LOGFILE"]), StreamHandler()],
+)
 
 web_ui = Blueprint(
     "web_ui",
@@ -43,6 +50,7 @@ def create_app():
 
     @app.errorhandler(500)
     def handle_internal_error(error):
+        exception(error)
         return render_template("error.htm")
 
     return app
