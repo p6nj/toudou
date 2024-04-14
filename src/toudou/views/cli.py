@@ -131,7 +131,6 @@ def show(list: str):
     If no list name is given, show "default" tasks.
     """
     try:
-        print(repr(List.read(list)))
         print(List.read(list))
     except ListNotFoundError:
         print(f'"{list}" list does not exist.')

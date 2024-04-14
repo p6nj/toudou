@@ -75,6 +75,14 @@ class Task:
             else ""
         )
 
+    def __iter__(self):
+        for tuple in {
+            "desc": self.desc,
+            "date": self.duefor,
+            "done": self.done,
+        }.items():
+            yield tuple
+
     @staticmethod
     def all(list: str = None) -> list_[Task]:  # type: ignore
         with Session() as session:
@@ -104,6 +112,11 @@ class Task:
             done=row.done,
         )
 
+    @staticmethod
+    def __nextId(list: str) -> int:
+        """Next available ID for a task (because autoincrement doesn't work)"""
+        return min(tasks, key=lambda task: task.id) if (tasks := Task.all(list)) else 0
+
     def create(self):
         if (not self.id) or (not Task.exists(self.id, self.list)):
             with Session(commit=True) as session:
@@ -112,7 +125,7 @@ class Task:
                         f"insert into {Task.__tablename__}(id, desc, done, duefor, list)"
                         "values (:id, :desc, :done, :duefor, :list)"
                     ).params(
-                        id=self.id,
+                        id=self.id if self.id else Task.__nextId(self.list),
                         desc=self.desc,
                         done=self.done,
                         duefor=self.duefor,
@@ -180,12 +193,19 @@ class List:
             else "Nothing to do." + linesep + "Did you know? " + random_fact()
         )
 
+    def __iter__(self):
+        for tuple in {item.id: dict(item) for item in self.items}.items():
+            yield tuple
+
     @staticmethod
     def all() -> list[List]:
         with Session() as session:
-            return session.execute(
-                text(f"select * from {List.__tablename__}")
-            ).fetchall()
+            return [
+                List.from_row(row)
+                for row in session.execute(
+                    text(f"select * from {List.__tablename__}")
+                ).fetchall()
+            ]
 
     @staticmethod
     def from_row(row: Row[str]) -> List:
