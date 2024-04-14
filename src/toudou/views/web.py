@@ -15,7 +15,7 @@ from toudou.config import config
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 from logging import basicConfig, exception, INFO, FileHandler, StreamHandler
-from .api import api as web_api, getlists as _
+from .api import api as web_api
 
 basicConfig(
     level=INFO,
