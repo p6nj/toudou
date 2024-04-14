@@ -1,6 +1,13 @@
 from datetime import date
 from flask import Blueprint
-from toudou.models import List, ListNotFoundError, Task, ListExistsError
+from toudou.models import (
+    List,
+    ListNotFoundError,
+    Task,
+    ListExistsError,
+    TaskExistsError,
+    TaskNotFoundError,
+)
 from spectree import SpecTree
 from pydantic.v1 import BaseModel, conlist, constr, condate, conint
 
@@ -50,6 +57,14 @@ class Lists(BaseModel):
         return [real(list) for list in self.inner]
 
 
+class Tasks(BaseModel):
+    inner: conlist(ConstrainedTask, max_items=255, unique_items=1)  # type: ignore
+
+    def __getreal__(self) -> list[Task]:
+        return [real(task) for task in self.inner]
+
+
+# lists
 @api.post("/lists")
 @spec.validate(tags=["api"])
 def createlists(lists: Lists):
@@ -108,3 +123,64 @@ def dellist(name: str):
         List.read(name).delete()
     except ListNotFoundError:
         return "List not found", 400
+
+
+# tasks
+@api.post("/tasks")
+@spec.validate(tags=["api"])
+def createtasks(tasks: Tasks):
+    try:
+        for task in real(tasks):
+            task.create()
+    except TaskExistsError as e:
+        return f"Task {e} already exists", 400
+
+
+@api.post("/task")
+@spec.validate(tags=["api"])
+def createtask(task: ConstrainedTask):
+    try:
+        real(task).create()
+    except TaskExistsError:
+        return "Task already exists", 400
+
+
+@api.get("/tasks")
+def readtasks():
+    return {task.id: dict(task) for task in Task.all()}
+
+
+@api.get("/list/<list>/<id>")
+def readtask(list: str, id: int):
+    try:
+        return dict(Task.read(id, list))
+    except TaskNotFoundError:
+        return "Task not found", 400
+
+
+@api.patch("/tasks")
+@spec.validate(tags=["api"])
+def updatetasks(tasks: Tasks):
+    delalltasks()
+    createtasks(tasks)
+
+
+@api.patch("/list/<list>/<id>")
+@spec.validate(tags=["api"])
+def updatetask(list: str, id: int, task: ConstrainedTask):
+    Task.read(id, list).delete()
+    createtask(task)
+
+
+@api.delete("/tasks")
+def delalltasks():
+    for task in Task.all():
+        task.delete()
+
+
+@api.delete("/list/<list>/<id>")
+def deltask(list: str, id: int):
+    try:
+        Task.read(id, list).delete()
+    except TaskNotFoundError:
+        return "Task not found", 400

@@ -86,12 +86,15 @@ class Task:
     @staticmethod
     def all(list: str = None) -> list_[Task]:  # type: ignore
         with Session() as session:
-            return session.execute(
-                text(
-                    f"select * from {Task.__tablename__}"
-                    + f" where list='{list}'" * bool(list)
-                )
-            ).fetchall()
+            return [
+                Task.from_row(row)
+                for row in session.execute(
+                    text(
+                        f"select * from {Task.__tablename__}"
+                        + f" where list='{list}'" * bool(list)
+                    )
+                ).fetchall()
+            ]
 
     @staticmethod
     def exists(id: int, list: str) -> Task:
@@ -140,7 +143,7 @@ class Task:
         if row := Task.exists(id, list):
             return Task.from_row(row)
         else:
-            raise ListNotFoundError(id)
+            raise TaskNotFoundError(id)
 
     def update(
         self,
