@@ -1,5 +1,7 @@
 from datetime import date
-from flask import Blueprint
+from flask import Blueprint, redirect, url_for
+from flask_httpauth import HTTPTokenAuth
+from toudou.config import config
 from toudou.models import (
     List,
     ListNotFoundError,
@@ -8,18 +10,36 @@ from toudou.models import (
     TaskExistsError,
     TaskNotFoundError,
 )
-from spectree import SpecTree
+from spectree import SecurityScheme, SpecTree
 from pydantic.v1 import BaseModel, conlist, constr, condate, conint
 
-spec = SpecTree("flask", annotations=True)
+spec = SpecTree(
+    "flask",
+    security_schemes=[
+        SecurityScheme(name="bearer_token", data={"type": "http", "scheme": "bearer"})
+    ],
+    security=[{"bearer_token": []}],
+)
+auth = HTTPTokenAuth(scheme="Bearer")
 
 api = Blueprint(
     "api",
     __name__,
-    url_prefix="/",
+    url_prefix="/api",
     static_url_path="../static",
     template_folder="../templates",
 )
+
+tokens = {
+    config["API_USER1_TOKEN"]: config["API_USER1"],
+    config["API_USER2_TOKEN"]: config["API_USER2"],
+}
+
+
+@auth.verify_token
+def verify_token(token):
+    if token in tokens:
+        return tokens[token]
 
 
 # doing it the Python way
@@ -67,21 +87,25 @@ class Tasks(BaseModel):
 # lists
 @api.post("/lists")
 @spec.validate(tags=["api"])
+@auth.login_required
 def createlists(lists: Lists):
     try:
         for list in real(lists):
             list.create()
     except ListExistsError as e:
         return f"List `{e}` already exists", 400
+    return redirect(url_for("lists"))
 
 
 @api.post("/list")
 @spec.validate(tags=["api"])
+@auth.login_required
 def createlist(list: ConstrainedList):
     try:
         real(list).create()
     except ListExistsError:
         return "List already exists", 400
+    return redirect(url_for("list/" + real(list).name))
 
 
 @api.get("/lists")
@@ -99,55 +123,65 @@ def readlist(name: str):
 
 @api.patch("/lists")
 @spec.validate(tags=["api"])
+@auth.login_required
 def updatelists(lists: Lists):
     delalllists()
-    createlists(lists)
+    return createlists(lists)
 
 
 @api.patch("/list/<name>")
 @spec.validate(tags=["api"])
+@auth.login_required
 def updatelist(name: str, list: ConstrainedList):
     List.read(name).delete()
-    createlist(list)
+    return createlist(list)
 
 
 @api.delete("/lists")
+@auth.login_required
 def delalllists():
     for list in List.all():
         list.delete()
+    return redirect(url_for("lists"))
 
 
 @api.delete("/list/<name>")
+@auth.login_required
 def dellist(name: str):
     try:
         List.read(name).delete()
     except ListNotFoundError:
         return "List not found", 400
+    return redirect(url_for("lists"))
 
 
 # tasks
 @api.post("/tasks")
 @spec.validate(tags=["api"])
+@auth.login_required
 def createtasks(tasks: Tasks):
     try:
         for task in real(tasks):
             task.create()
     except TaskExistsError as e:
         return f"Task {e} already exists", 400
+    return redirect(url_for("tasks"))
 
 
 @api.post("/task")
 @spec.validate(tags=["api"])
+@auth.login_required
 def createtask(task: ConstrainedTask):
     try:
         real(task).create()
     except TaskExistsError:
         return "Task already exists", 400
+    return redirect(url_for("list/" + real(task).list + "/" + real(task).id))
 
 
 @api.get("/tasks")
 def readtasks():
-    return {task.id: dict(task) for task in Task.all()}
+    return readlists()
 
 
 @api.get("/list/<list>/<id>")
@@ -160,27 +194,33 @@ def readtask(list: str, id: int):
 
 @api.patch("/tasks")
 @spec.validate(tags=["api"])
+@auth.login_required
 def updatetasks(tasks: Tasks):
     delalltasks()
-    createtasks(tasks)
+    return createtasks(tasks)
 
 
 @api.patch("/list/<list>/<id>")
 @spec.validate(tags=["api"])
+@auth.login_required
 def updatetask(list: str, id: int, task: ConstrainedTask):
     Task.read(id, list).delete()
-    createtask(task)
+    return createtask(task)
 
 
 @api.delete("/tasks")
+@auth.login_required
 def delalltasks():
     for task in Task.all():
         task.delete()
+    return redirect(url_for("tasks"))
 
 
 @api.delete("/list/<list>/<id>")
+@auth.login_required
 def deltask(list: str, id: int):
     try:
         Task.read(id, list).delete()
     except TaskNotFoundError:
         return "Task not found", 400
+    return redirect(url_for("tasks"))

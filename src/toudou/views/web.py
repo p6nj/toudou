@@ -15,7 +15,7 @@ from toudou.config import config
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 from logging import basicConfig, exception, INFO, FileHandler, StreamHandler
-from .api import api as web_api
+from .api import api as web_api, spec as api_spec
 
 basicConfig(
     level=INFO,
@@ -39,8 +39,9 @@ def create_app():
     app = Flask(__name__, static_folder="../static", template_folder="../templates")
 
     app.config.from_prefixed_env()
+    app.register_blueprint(web_api)
+    api_spec.register(app)
     app.register_blueprint(web_ui)
-    app.register_blueprint(web_api, url_prefix="/api")
 
     @app.route("/favicon.ico")
     def favicon():
