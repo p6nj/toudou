@@ -86,8 +86,8 @@ class Tasks(BaseModel):
 
 # lists
 @api.post("/lists")
-@spec.validate(tags=["api"])
 @auth.login_required
+@spec.validate(tags=["api", "lists"])
 def createlists(lists: Lists):
     try:
         for list in real(lists):
@@ -98,8 +98,8 @@ def createlists(lists: Lists):
 
 
 @api.post("/list")
-@spec.validate(tags=["api"])
 @auth.login_required
+@spec.validate(tags=["api", "lists"])
 def createlist(list: ConstrainedList):
     try:
         real(list).create()
@@ -109,11 +109,13 @@ def createlist(list: ConstrainedList):
 
 
 @api.get("/lists")
+@spec.validate(tags=["api", "lists"])
 def readlists():
     return {list.name: dict(list) for list in List.all()}
 
 
 @api.get("/list/<name>")
+@spec.validate(tags=["api", "lists"])
 def readlist(name: str):
     try:
         return dict(List.read(name))
@@ -122,16 +124,16 @@ def readlist(name: str):
 
 
 @api.patch("/lists")
-@spec.validate(tags=["api"])
 @auth.login_required
+@spec.validate(tags=["api", "lists"])
 def updatelists(lists: Lists):
     delalllists()
     return createlists(lists)
 
 
 @api.patch("/list/<name>")
-@spec.validate(tags=["api"])
 @auth.login_required
+@spec.validate(tags=["api", "lists"])
 def updatelist(name: str, list: ConstrainedList):
     List.read(name).delete()
     return createlist(list)
@@ -139,6 +141,7 @@ def updatelist(name: str, list: ConstrainedList):
 
 @api.delete("/lists")
 @auth.login_required
+@spec.validate(tags=["api", "lists"])
 def delalllists():
     for list in List.all():
         list.delete()
@@ -147,6 +150,7 @@ def delalllists():
 
 @api.delete("/list/<name>")
 @auth.login_required
+@spec.validate(tags=["api", "lists"])
 def dellist(name: str):
     try:
         List.read(name).delete()
@@ -157,8 +161,8 @@ def dellist(name: str):
 
 # tasks
 @api.post("/tasks")
-@spec.validate(tags=["api"])
 @auth.login_required
+@spec.validate(tags=["api", "tasks"])
 def createtasks(tasks: Tasks):
     try:
         for task in real(tasks):
@@ -169,8 +173,8 @@ def createtasks(tasks: Tasks):
 
 
 @api.post("/task")
-@spec.validate(tags=["api"])
 @auth.login_required
+@spec.validate(tags=["api", "tasks"])
 def createtask(task: ConstrainedTask):
     try:
         real(task).create()
@@ -180,11 +184,13 @@ def createtask(task: ConstrainedTask):
 
 
 @api.get("/tasks")
+@spec.validate(tags=["api", "tasks"])
 def readtasks():
     return readlists()
 
 
 @api.get("/list/<list>/<id>")
+@spec.validate(tags=["api", "tasks"])
 def readtask(list: str, id: int):
     try:
         return dict(Task.read(id, list))
@@ -193,16 +199,16 @@ def readtask(list: str, id: int):
 
 
 @api.patch("/tasks")
-@spec.validate(tags=["api"])
 @auth.login_required
+@spec.validate(tags=["api", "tasks"])
 def updatetasks(tasks: Tasks):
     delalltasks()
     return createtasks(tasks)
 
 
 @api.patch("/list/<list>/<id>")
-@spec.validate(tags=["api"])
 @auth.login_required
+@spec.validate(tags=["api", "tasks"])
 def updatetask(list: str, id: int, task: ConstrainedTask):
     Task.read(id, list).delete()
     return createtask(task)
@@ -210,6 +216,7 @@ def updatetask(list: str, id: int, task: ConstrainedTask):
 
 @api.delete("/tasks")
 @auth.login_required
+@spec.validate(tags=["api", "tasks"])
 def delalltasks():
     for task in Task.all():
         task.delete()
@@ -217,7 +224,7 @@ def delalltasks():
 
 
 @api.delete("/list/<list>/<id>")
-@auth.login_required
+@spec.validate(tags=["api", "tasks"])
 def deltask(list: str, id: int):
     try:
         Task.read(id, list).delete()
